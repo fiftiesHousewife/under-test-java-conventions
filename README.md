@@ -1,5 +1,9 @@
 # java-conventions
 
+[![Build](https://github.com/fiftiesHousewife/under-test-java-conventions/actions/workflows/build.yml/badge.svg)](https://github.com/fiftiesHousewife/under-test-java-conventions/actions/workflows/build.yml)
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.fiftieshousewife/java-conventions)](https://central.sonatype.com/artifact/io.github.fiftieshousewife/java-conventions)
+[![Licence](https://img.shields.io/badge/licence-Apache%202.0-blue)](LICENSE)
+
 Part of under-test.
 
 **One set of code-quality standards for Java, as one Gradle plugin: each repo applies a pinned version instead of
