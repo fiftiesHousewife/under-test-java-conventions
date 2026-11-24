@@ -49,6 +49,7 @@ val underTest = extensions.create<UnderTestExtension>("underTest").apply {
     cpdMinimumTokens.convention(
         providers.gradleProperty("underTest.cpdMinimumTokens").orElse(version("cpd-minimum-tokens")).map { it.toInt() },
     )
+    minMutationScore.convention(providers.gradleProperty("underTest.minMutationScore").map { it.toInt() })
     maxClassesPerPackage.convention(
         providers.gradleProperty("underTest.maxClassesPerPackage").orElse(version("max-classes-per-package"))
             .map { it.toInt() },
@@ -109,7 +110,9 @@ afterEvaluate {
 
 tasks.withType<JavaCompile>().configureEach {
     options.encoding = "UTF-8"
-    options.compilerArgs.addAll(listOf("-Xlint:all,-processing", "-Werror", "-parameters"))
+    // Every warning about the code is an error. Not javac's "options" warnings, which are about its flags: compiling
+    // for an older Java (options.release = 8) warns that 8 is obsolete, and that is the repo's choice, not a fault.
+    options.compilerArgs.addAll(listOf("-Xlint:all,-processing,-options", "-Werror", "-parameters"))
 }
 
 tasks.withType<AbstractArchiveTask>().configureEach {
@@ -424,6 +427,11 @@ tasks.register<JavaExec>("pitest") {
     val sources = files(mainSourceSet.map { it.java.srcDirs }).filter { it.isDirectory }
     val classes = files(mainSourceSet.map { it.output.classesDirs })
     val reports = pitReports
+    val minimumScore = underTest.minMutationScore
+    // With underTest.minMutationScore, pitest fails when the tests catch fewer of the planted bugs, in percent.
+    argumentProviders.add(CommandLineArgumentProvider {
+        minimumScore.map { listOf("--mutationThreshold", "$it") }.getOrElse(emptyList())
+    })
     argumentProviders.add(CommandLineArgumentProvider {
         listOf(
             "--targetClasses", JavaPackages.targets(sources.files).joinToString(","),

@@ -3,6 +3,8 @@ package io.github.fiftieshousewife.javaconventions
 import org.assertj.core.api.Assertions.assertThat
 import org.gradle.testkit.runner.TaskOutcome
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import org.junit.jupiter.api.io.TempDir
 import java.io.File
 
@@ -46,6 +48,15 @@ class CompilerTest {
             }
             """,
         ).build("compileJava")
+        assertThat(result.task(":compileJava")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = [8, 17])
+    fun `code compiled for an older Java with options release still compiles`(release: Int, @TempDir dir: File) {
+        val result = SampleProject(dir).buildScript("tasks.compileJava { options.release = $release }")
+            .main("com/example/Greeting.java", CleanSample.GREETING)
+            .build("compileJava")
         assertThat(result.task(":compileJava")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
     }
 }

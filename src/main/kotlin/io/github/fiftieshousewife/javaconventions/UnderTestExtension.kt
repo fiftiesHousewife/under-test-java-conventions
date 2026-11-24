@@ -32,6 +32,9 @@ abstract class UnderTestExtension {
     /** The fewest copied tokens of Java that fail the copy-paste check (50 unless changed). */
     abstract val cpdMinimumTokens: Property<Int>
 
+    /** Testing evidence: with it, pitest fails unless the tests catch at least this percentage of planted bugs. */
+    abstract val minMutationScore: Property<Int>
+
     /** The most classes a package may hold, in any source set (20 unless changed). */
     abstract val maxClassesPerPackage: Property<Int>
 

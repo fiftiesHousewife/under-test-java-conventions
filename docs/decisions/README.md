@@ -31,3 +31,5 @@ Groups: **Size and simplicity**, **Tests**, **Comments**, **Duplication and stru
 | [0021](0021-a-library-leaves-its-users-to-choose-their-logging.md) | An application logs through Log4j 2; a library leaves its users to choose their logging | Build | accepted |
 | [0022](0022-pit-runs-from-its-command-line-and-only-spotbugs-and-the-versions-report-come-from-the-plugin-portal.md) | PIT runs from its command line, and only SpotBugs' and the versions report's Gradle plugins come from the Gradle Plugin Portal | Build | replaced by 0023 |
 | [0023](0023-spotbugs-pit-and-cpd-run-from-their-command-lines-and-only-the-versions-report-comes-from-the-plugin-portal.md) | SpotBugs, PIT and CPD run from their command lines, and only the versions report comes from the Gradle Plugin Portal | Build | accepted |
+| [0024](0024-compiling-for-an-older-java-is-not-a-warning-that-fails-the-build.md) | Compiling for an older Java is not a warning that fails the build | Build | accepted |
+| [0025](0025-a-repo-can-require-a-minimum-mutation-score.md) | A repo can require a minimum mutation score | Coverage and evidence | accepted |
