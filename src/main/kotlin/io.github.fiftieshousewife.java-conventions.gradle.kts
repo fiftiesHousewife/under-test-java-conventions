@@ -6,18 +6,16 @@
 //  - testing evidence: coverage verification, always on; only the threshold changes.
 // Every underTest setting can also be a Gradle property, e.g. -PunderTest.codeStyle=NONE, or in an init script.
 // Advice (for-each loops) is reported by pmdAdvice and never fails the build. Mutation testing is opt-in: pitest.
-// PIT and CPD run from their own command lines, so the plugin needs no Gradle plugin of theirs.
+// SpotBugs, PIT and CPD run from their own command lines, so the plugin needs no Gradle plugin of theirs.
 
 import com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask
-import com.github.spotbugs.snom.Confidence
-import com.github.spotbugs.snom.Effort
-import com.github.spotbugs.snom.SpotBugsTask
 import de.thetaphi.forbiddenapis.gradle.CheckForbiddenApis
 import groovy.json.JsonSlurper
 import io.github.fiftieshousewife.javaconventions.CodeStyleSource
 import io.github.fiftieshousewife.javaconventions.InfoLineFilter
 import io.github.fiftieshousewife.javaconventions.JavaPackages
 import io.github.fiftieshousewife.javaconventions.MutationSummaryTask
+import io.github.fiftieshousewife.javaconventions.SpotBugsCheck
 import io.github.fiftieshousewife.javaconventions.UnderTestExtension
 import java.io.OutputStream
 import java.util.Properties
@@ -27,7 +25,6 @@ plugins {
     jacoco
     checkstyle
     pmd
-    id("com.github.spotbugs")
     id("de.thetaphi.forbiddenapis")
     id("io.github.ben-manes.versions")
 }
@@ -48,6 +45,7 @@ val underTest = extensions.create<UnderTestExtension>("underTest").apply {
     checkstyleConfig.convention(fileProperty("underTest.checkstyleConfig"))
     pmdRuleset.convention(fileProperty("underTest.pmdRuleset"))
     forbiddenApiSignatures.convention(fileProperty("underTest.forbiddenApiSignatures"))
+    spotbugsExcludeFilter.convention(fileProperty("underTest.spotbugsExcludeFilter"))
     cpdMinimumTokens.convention(
         providers.gradleProperty("underTest.cpdMinimumTokens").orElse(version("cpd-minimum-tokens")).map { it.toInt() },
     )
@@ -99,7 +97,6 @@ dependencies {
     "testImplementation"("org.assertj:assertj-core:${version("assertj")}")
     "testRuntimeOnly"("org.junit.platform:junit-platform-launcher")
 
-    "spotbugsPlugins"("com.h3xstream.findsecbugs:findsecbugs-plugin:${version("findsecbugs")}")
 }
 
 // An application logs through Log4j 2 at run time. A library (java-library) gets it for its own tests only: it leaves
@@ -183,7 +180,7 @@ tasks.named("check") {
 }
 
 // ---------- Code-quality standards (replaceable; see underTest.codeStyle) ----------
-listOf(Checkstyle::class, Pmd::class, SpotBugsTask::class, CheckForbiddenApis::class).forEach { type ->
+listOf(Checkstyle::class, Pmd::class, SpotBugsCheck::class, CheckForbiddenApis::class).forEach { type ->
     tasks.withType(type.java).configureEach {
         val style = underTest.codeStyle
         onlyIf("underTest.codeStyle is not NONE") { style.get() != CodeStyleSource.NONE }
@@ -309,16 +306,43 @@ tasks.named("check") {
     dependsOn(checkPackageSize)
 }
 
-// ---------- Bugs and security bugs ----------
-spotbugs {
-    toolVersion = version("spotbugs")
-    effort = Effort.MAX
-    reportLevel = Confidence.LOW
-    ignoreFailures = false
+// ---------- Bugs and security bugs: SpotBugs with FindSecBugs, run from its command line ----------
+val spotbugsTool = configurations.create("spotbugsTool") {
+    isCanBeConsumed = false
+    isCanBeResolved = true
 }
-
-tasks.withType<SpotBugsTask>().configureEach {
-    reports.create("html") { required = true }
+val spotbugsPlugins = configurations.create("spotbugsPlugins") {
+    isCanBeConsumed = false
+    isCanBeResolved = true
+    isTransitive = false
+}
+dependencies {
+    spotbugsTool("com.github.spotbugs:spotbugs:${version("spotbugs")}")
+    spotbugsTool("org.slf4j:slf4j-simple:${version("slf4j")}")
+    spotbugsPlugins("com.h3xstream.findsecbugs:findsecbugs-plugin:${version("findsecbugs")}")
+}
+val spotbugsReports = layout.buildDirectory.dir("reports/spotbugs")
+// One task for each source set, including those added after the plugin: spotbugsMain, spotbugsTest, ...
+sourceSetsForAdvice.configureEach {
+    val sourceSet = this
+    val spotbugs = tasks.register<SpotBugsCheck>(sourceSet.getTaskName("spotbugs", null)) {
+        group = "verification"
+        description = "Finds bug patterns and security bugs in the ${sourceSet.name} classes (SpotBugs, FindSecBugs)."
+        classpath = spotbugsTool
+        mainClass = "edu.umd.cs.findbugs.FindBugs2"
+        javaLauncher = toolchainLauncher
+        dependsOn(sourceSet.classesTaskName)
+        classesDirs.from(sourceSet.output.classesDirs)
+        auxClasspath.from(sourceSet.compileClasspath)
+        pluginJars.from(spotbugsPlugins)
+        sourceDirs.from(sourceSet.allSource.sourceDirectories)
+        excludeFilter = underTest.spotbugsExcludeFilter
+        xmlReport = spotbugsReports.map { it.file("${sourceSet.name}.xml") }
+        htmlReport = spotbugsReports.map { it.file("${sourceSet.name}.html") }
+    }
+    tasks.named("check") {
+        dependsOn(spotbugs)
+    }
 }
 
 // ---------- Forbidden APIs ----------

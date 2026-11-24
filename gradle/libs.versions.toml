@@ -20,8 +20,7 @@ min-line-coverage = "0.80"
 cpd-minimum-tokens = "50"
 max-classes-per-package = "20"
 
-# Gradle plugins the plugin applies (SpotBugs' and the versions report's are on the Gradle Plugin Portal only)
-gradle-spotbugs-plugin = "6.5.13"
+# Gradle plugins the plugin applies (the versions report's is on the Gradle Plugin Portal only)
 gradle-forbiddenapis-plugin = "3.11"
 gradle-versions-plugin = "0.67.0"
 nmcp = "1.6.2"
@@ -34,7 +33,6 @@ detekt-kotlin = "2.0.21"
 oldest-gradle = "9.1.0"
 
 [libraries]
-gradle-spotbugs-plugin = { module = "com.github.spotbugs.snom:spotbugs-gradle-plugin", version.ref = "gradle-spotbugs-plugin" }
 gradle-forbiddenapis-plugin = { module = "de.thetaphi:forbiddenapis", version.ref = "gradle-forbiddenapis-plugin" }
 gradle-versions-plugin = { module = "io.github.ben-manes:gradle-versions-plugin", version.ref = "gradle-versions-plugin" }
 junit-bom = { module = "org.junit:junit-bom", version.ref = "junit" }

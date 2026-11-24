@@ -26,6 +26,31 @@ Cite nothing outside this repo: a record, a comment or the README stands on what
 * Nothing in the plugin reads the applying repo's version catalogue or quality files, except an organisation's rule
   files when it chooses them.
 
+## Building and testing
+`./gradlew check` runs detekt on this repo's own Kotlin (here only: a build applying the plugin gets none of it), the
+unit tests (`test`), and the functional tests (`functionalTest`), which build small sample projects with Gradle
+TestKit: each rule has a sample that breaks it, and a clean sample passes. They need a JDK 25 that Gradle can find, or
+`-Porg.gradle.java.installations.paths=<its home>`.
+
+The functional tests include the plugin as published: `check` publishes it to `build/local-repo` (what would go to
+Maven Central), and a sample build applies it from there by id and version, on this build's Gradle and on the oldest
+supported (`oldest-gradle` in [libs.versions.toml](gradle/libs.versions.toml)).
+
+### Memory
+The build's Gradle daemon needs **2 GiB of heap and 1 GiB of metaspace**: detekt and the Kotlin compiler run inside it,
+and Gradle's defaults (512 MiB heap, 384 MiB metaspace) run out. [gradle.properties](gradle.properties) sets them
+(`org.gradle.jvmargs`); allow about 3 GiB free for it. The functional tests run their sample builds one at a time, in a
+TestKit Gradle daemon at Gradle's defaults, reused from one build to the next: running them in parallel was slower on
+a laptop, as the daemons competed for memory and couldn't be reused. A build applying the plugin needs no more memory
+for it.
+
+## Releasing
+Push a version tag, such as `v0.1.0`. The [release workflow](.github/workflows/release.yml) runs every check, then
+publishes that version to Maven Central and makes a GitHub release, with `docs/releases/<version>.md` as its notes when
+there is one. It needs four repository secrets: `CENTRAL_PORTAL_USERNAME` and `CENTRAL_PORTAL_PASSWORD` (a Central
+Portal user token), and `SIGNING_KEY` and `SIGNING_KEY_PASSWORD` (an ASCII-armoured PGP private key and its
+passphrase). A release on Maven Central can't be changed or removed. Then raise `version` in `gradle.properties`, and
+the version in the README's "Using it".
+
 ## Before you finish
-Run `./gradlew check`. It must pass. It runs detekt on this repo's Kotlin as well as the functional tests. Its Gradle
-daemon needs 2 GiB of heap and 1 GiB of metaspace, set in `gradle.properties` (see the README's "Memory").
+Run `./gradlew check`. It must pass.

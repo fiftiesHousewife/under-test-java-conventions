@@ -26,6 +26,9 @@ abstract class UnderTestExtension {
     /** With [CodeStyleSource.ORGANISATION]: extra forbidden-API signatures, in addition to the bundled JDK sets. */
     abstract val forbiddenApiSignatures: RegularFileProperty
 
+    /** A SpotBugs filter file of findings to leave out, kept in the repo; with any `codeStyle` but NONE. */
+    abstract val spotbugsExcludeFilter: RegularFileProperty
+
     /** The fewest copied tokens of Java that fail the copy-paste check (50 unless changed). */
     abstract val cpdMinimumTokens: Property<Int>
 
