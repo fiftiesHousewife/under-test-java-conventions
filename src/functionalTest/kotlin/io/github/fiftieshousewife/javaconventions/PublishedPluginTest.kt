@@ -26,4 +26,12 @@ class PublishedPluginTest {
             .build("check")
         assertThat(result.task(":check")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
     }
+
+    @Test
+    fun `the jar is published as io_github_fiftieshousewife java-conventions, where the plugin marker points`() {
+        val version = System.getProperty("javaconventions.version")
+        val jar = File(System.getProperty("javaconventions.repo"))
+            .resolve("io/github/fiftieshousewife/java-conventions/$version/java-conventions-$version.jar")
+        assertThat(jar).isFile()
+    }
 }

@@ -76,8 +76,15 @@ kotlin {
     }
 }
 
-// What would be published, and what PublishedPluginTest applies the plugin from.
+// What would be published, and what PublishedPluginTest applies the plugin from. Emptied before each publish to it, so
+// nothing left from an earlier build can stand in for what this one publishes.
 val localRepo = layout.buildDirectory.dir("local-repo")
+val cleanLocalRepo = tasks.register<Delete>("cleanLocalRepo") {
+    delete(localRepo)
+}
+tasks.withType<PublishToMavenRepository>().matching { it.name.endsWith("ToLocalRepository") }.configureEach {
+    dependsOn(cleanLocalRepo)
+}
 
 // Unit tests: the plugin's classes, on their own, in seconds.
 tasks.test {
@@ -139,6 +146,11 @@ publishing {
         }
     }
     publications.withType<MavenPublication>().configureEach {
+        // The jar is io.github.fiftieshousewife:java-conventions whatever the project is called; its plugin marker,
+        // io.github.fiftieshousewife.java-conventions, points at it.
+        if (name == "pluginMaven") {
+            artifactId = "java-conventions"
+        }
         pom {
             name = "java-conventions"
             description = "The code-quality standards for Java: Checkstyle, PMD and its copy-paste detector, " +
