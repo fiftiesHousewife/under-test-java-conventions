@@ -56,9 +56,9 @@
           message="A test makes one assertion, or one assertAll(...): split it, or group what it checks in one assertAll"
           class="net.sourceforge.pmd.lang.rule.xpath.XPathRule">
         <description>
-            A test makes one assertion statement: one JUnit assert* call, one AssertJ assertThat(...) chain, or one
-            assertAll(...) that groups several, so every failure in it is reported. A second statement means a
-            second test, or the same one inside an assertAll.
+            A test makes one assertion statement: one JUnit assert* call, one AssertJ assertThat(...) chain, one
+            Mockito verify(...), or one assertAll(...) that groups several, so every failure in it is reported. A
+            second statement means a second test, or the same one inside an assertAll.
         </description>
         <priority>1</priority>
         <properties>
@@ -66,7 +66,8 @@
                 <value><![CDATA[
 //MethodDeclaration[ModifierList/Annotation[@SimpleName = ('Test', 'ParameterizedTest', 'RepeatedTest', 'Property', 'Example')]]
   [count(Block/ExpressionStatement[
-      MethodCall[starts-with(@MethodName, 'assert') or .//MethodCall[starts-with(@MethodName, 'assert')]]
+      MethodCall[starts-with(@MethodName, 'assert') or starts-with(@MethodName, 'verify')
+        or .//MethodCall[starts-with(@MethodName, 'assert') or starts-with(@MethodName, 'verify')]]
   ]) > 1]
                 ]]></value>
             </property>

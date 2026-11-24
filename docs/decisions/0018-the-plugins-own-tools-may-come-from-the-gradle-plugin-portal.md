@@ -1,5 +1,5 @@
 ---
-status: accepted
+status: replaced by 0022
 decision-makers: Maintainers
 group: Build
 ---

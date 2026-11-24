@@ -24,4 +24,11 @@ class PackageSizeTest {
         val result = withClasses(SampleProject(dir), 20).build("checkPackageSize")
         assertThat(result.task(":checkPackageSize")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
     }
+
+    @Test
+    fun `an organisation can change the package-size limit`(@TempDir dir: File) {
+        val result = withClasses(SampleProject(dir), 21).buildScript("underTest { maxClassesPerPackage = 25 }")
+            .build("checkPackageSize")
+        assertThat(result.task(":checkPackageSize")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+    }
 }

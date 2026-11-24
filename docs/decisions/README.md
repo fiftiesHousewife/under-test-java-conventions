@@ -25,5 +25,8 @@ Groups: **Size and simplicity**, **Tests**, **Comments**, **Duplication and stru
 | [0015](0015-mutation-testing-is-available-not-required.md) | Mutation testing is available, not required | Coverage and evidence | accepted |
 | [0016](0016-out-of-date-dependencies-are-reported.md) | Out-of-date dependencies are reported, and fail only when asked | Build | accepted |
 | [0017](0017-the-standards-are-one-plugin-each-repo-applies-at-a-pinned-version.md) | The standards are one plugin that each repo applies at a pinned version, with its rule files and tool versions inside | Build | accepted |
-| [0018](0018-the-plugins-own-tools-may-come-from-the-gradle-plugin-portal.md) | The plugin's own tools may come from the Gradle Plugin Portal | Build | accepted |
+| [0018](0018-the-plugins-own-tools-may-come-from-the-gradle-plugin-portal.md) | The plugin's own tools may come from the Gradle Plugin Portal | Build | replaced by 0022 |
 | [0019](0019-dependencies-are-checked-for-known-vulnerabilities-against-osv.md) | Dependencies are checked for known vulnerabilities against the OSV database | Bugs and APIs | proposed |
+| [0020](0020-an-organisation-can-change-the-copy-paste-and-package-size-limits.md) | An organisation can change the copy-paste and package-size limits | Settings | accepted |
+| [0021](0021-a-library-leaves-its-users-to-choose-their-logging.md) | An application logs through Log4j 2; a library leaves its users to choose their logging | Build | accepted |
+| [0022](0022-pit-runs-from-its-command-line-and-only-spotbugs-and-the-versions-report-come-from-the-plugin-portal.md) | PIT runs from its command line, and only SpotBugs' and the versions report's Gradle plugins come from the Gradle Plugin Portal | Build | accepted |

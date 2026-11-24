@@ -1,0 +1,16 @@
+# On top of detekt's defaults: src/functionalTest is test code, held to the same rules as src/test (detekt's defaults
+# know only src/test), so its tests may have sentence names, sample numbers and many small helpers.
+naming:
+  FunctionNaming:
+    excludes: ['**/test/**', '**/functionalTest/**']
+style:
+  MagicNumber:
+    excludes: ['**/test/**', '**/functionalTest/**', '**/*.kts']
+complexity:
+  TooManyFunctions:
+    excludes: ['**/test/**', '**/functionalTest/**']
+performance:
+  ForEachOnRange:
+    excludes: ['**/test/**', '**/functionalTest/**']
+  SpreadOperator:
+    excludes: ['**/test/**', '**/functionalTest/**']

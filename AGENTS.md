@@ -10,16 +10,19 @@ Cite nothing outside this repo: a record, a comment or the README stands on what
 | Path | What |
 |---|---|
 | `src/main/kotlin/io.github.fiftieshousewife.java-conventions.gradle.kts` | The plugin: what it applies and how |
+| `src/main/kotlin/io/github/fiftieshousewife/javaconventions/` | Its classes: the `underTest` settings, the PIT summary, package counting |
 | `src/main/resources/io/github/fiftieshousewife/javaconventions/` | The rule files: Checkstyle, PMD (failing, and advice), forbidden-API signatures |
 | `gradle/libs.versions.toml` | The plugin's own build, and the tool versions it applies (written into the jar as `versions.properties`) |
-| `src/test/kotlin/` | Functional tests: sample projects built with Gradle TestKit |
+| `src/test/kotlin/` | Functional tests (sample projects built with Gradle TestKit; `StyleBreaches` and `ApiBreaches` hold a sample breaking each rule) and unit tests |
 | `docs/decisions/` | This repo's decision records: why each rule, limit and tool is what it is |
-| `.github/skills/` | Skills for working here, such as writing a decision record |
+| `.github/skills/` | Skills for working here, such as writing a decision record (linked into `.claude/skills/` for Claude Code) |
 
 ## Rules for a change
 * A rule, a limit or a tool changes only by a decision record in [docs/decisions](docs/decisions/README.md)
   ([how](.github/skills/write-a-decision-record/SKILL.md)); the change names it.
-* Every rule has a functional test with a sample it fails, and the clean sample still passes.
+* Every rule has a functional test with a sample it fails, and the clean sample still passes. A setting has a test
+  that changes it. A sample must compile with no warning: the build treats warnings as errors.
+* The README's tables of standards and settings, and the decision records, say the same as the plugin.
 * Nothing in the plugin reads the applying repo's version catalogue or quality files, except an organisation's rule
   files when it chooses them.
 

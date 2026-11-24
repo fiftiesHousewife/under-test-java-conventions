@@ -47,4 +47,13 @@ class CopyPasteTest {
         val result = SampleProject(dir).build("cpdCheck")
         assertThat(result.task(":cpdCheck")?.outcome).isEqualTo(TaskOutcome.SKIPPED)
     }
+
+    @Test
+    fun `an organisation can raise the copy-paste limit`(@TempDir dir: File) {
+        val result = SampleProject(dir)
+            .main("com/example/First.java", scorer("First"))
+            .main("com/example/Second.java", scorer("Second"))
+            .build("cpdCheck", "-PunderTest.cpdMinimumTokens=100")
+        assertThat(result.task(":cpdCheck")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+    }
 }

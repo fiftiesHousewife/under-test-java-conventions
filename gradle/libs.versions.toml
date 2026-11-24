@@ -17,9 +17,10 @@ findsecbugs = "1.14.0"
 pitest = "1.30.2"
 pitest-junit5 = "1.2.3"
 min-line-coverage = "0.80"
+cpd-minimum-tokens = "50"
+max-classes-per-package = "20"
 
-# Gradle plugins the plugin applies (SpotBugs', the versions report's and PIT's are on the Gradle Plugin Portal only)
-gradle-pitest-plugin = "1.19.0"
+# Gradle plugins the plugin applies (SpotBugs' and the versions report's are on the Gradle Plugin Portal only)
 gradle-spotbugs-plugin = "6.5.13"
 gradle-forbiddenapis-plugin = "3.11"
 gradle-versions-plugin = "0.67.0"
@@ -33,7 +34,6 @@ detekt-kotlin = "2.0.21"
 oldest-gradle = "9.1.0"
 
 [libraries]
-gradle-pitest-plugin = { module = "info.solidsoft.gradle.pitest:gradle-pitest-plugin", version.ref = "gradle-pitest-plugin" }
 gradle-spotbugs-plugin = { module = "com.github.spotbugs.snom:spotbugs-gradle-plugin", version.ref = "gradle-spotbugs-plugin" }
 gradle-forbiddenapis-plugin = { module = "de.thetaphi:forbiddenapis", version.ref = "gradle-forbiddenapis-plugin" }
 gradle-versions-plugin = { module = "io.github.ben-manes:gradle-versions-plugin", version.ref = "gradle-versions-plugin" }

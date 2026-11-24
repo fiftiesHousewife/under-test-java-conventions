@@ -12,6 +12,7 @@ import java.io.File
 class SampleProject(private val dir: File, private val published: Boolean = false) {
 
     private var gradleVersion: String? = null
+    private var buildEnvironment: Map<String, String>? = null
 
     init {
         dir.resolve("settings.gradle.kts").writeText(
@@ -47,6 +48,11 @@ class SampleProject(private val dir: File, private val published: Boolean = fals
         dir.resolve("build.gradle.kts").appendText("\n" + lines.trimIndent() + "\n")
     }
 
+    /** Builds with these environment variables added to this build's own, such as CI=true. */
+    fun withEnvironment(variables: Map<String, String>): SampleProject = apply {
+        buildEnvironment = System.getenv() + variables
+    }
+
     /** Builds with the given Gradle version, downloaded by TestKit, instead of the Gradle running this build. */
     fun onGradle(version: String): SampleProject = apply { gradleVersion = version }
 
@@ -63,6 +69,7 @@ class SampleProject(private val dir: File, private val published: Boolean = fals
         .withProjectDir(dir)
         .apply { if (!published) withPluginClasspath() }
         .apply { gradleVersion?.let { withGradleVersion(it) } }
+        .apply { buildEnvironment?.let { withEnvironment(it) } }
         .withArguments(listOf("--stacktrace") + proxyArguments() + arguments)
         .forwardOutput()
 

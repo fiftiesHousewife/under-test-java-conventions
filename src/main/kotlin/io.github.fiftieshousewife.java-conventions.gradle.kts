@@ -6,6 +6,7 @@
 //  - testing evidence: coverage verification, always on; only the threshold changes.
 // Every underTest setting can also be a Gradle property, e.g. -PunderTest.codeStyle=NONE, or in an init script.
 // Advice (for-each loops) is reported by pmdAdvice and never fails the build. Mutation testing is opt-in: pitest.
+// PIT and CPD run from their own command lines, so the plugin needs no Gradle plugin of theirs.
 
 import com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask
 import com.github.spotbugs.snom.Confidence
@@ -15,6 +16,7 @@ import de.thetaphi.forbiddenapis.gradle.CheckForbiddenApis
 import groovy.json.JsonSlurper
 import io.github.fiftieshousewife.javaconventions.CodeStyleSource
 import io.github.fiftieshousewife.javaconventions.InfoLineFilter
+import io.github.fiftieshousewife.javaconventions.JavaPackages
 import io.github.fiftieshousewife.javaconventions.MutationSummaryTask
 import io.github.fiftieshousewife.javaconventions.UnderTestExtension
 import java.io.OutputStream
@@ -28,7 +30,6 @@ plugins {
     id("com.github.spotbugs")
     id("de.thetaphi.forbiddenapis")
     id("io.github.ben-manes.versions")
-    id("info.solidsoft.pitest")
 }
 
 // ---------- What ships in the plugin's jar: tool versions and rule files ----------
@@ -47,6 +48,13 @@ val underTest = extensions.create<UnderTestExtension>("underTest").apply {
     checkstyleConfig.convention(fileProperty("underTest.checkstyleConfig"))
     pmdRuleset.convention(fileProperty("underTest.pmdRuleset"))
     forbiddenApiSignatures.convention(fileProperty("underTest.forbiddenApiSignatures"))
+    cpdMinimumTokens.convention(
+        providers.gradleProperty("underTest.cpdMinimumTokens").orElse(version("cpd-minimum-tokens")).map { it.toInt() },
+    )
+    maxClassesPerPackage.convention(
+        providers.gradleProperty("underTest.maxClassesPerPackage").orElse(version("max-classes-per-package"))
+            .map { it.toInt() },
+    )
     minLineCoverage.convention(
         providers.gradleProperty("underTest.minLineCoverage").orElse(version("min-line-coverage"))
             .map { it.toBigDecimal() },
@@ -78,14 +86,13 @@ java {
 val toolchainLauncher = javaToolchains.launcherFor { languageVersion = JavaLanguageVersion.of(version("java")) }
 
 dependencies {
-    // Logging: Lombok's @Slf4j on the SLF4J API, with Log4j 2 behind it at run time.
+    // Logging: Lombok's @Slf4j on the SLF4J API. Log4j 2 behind it is added below, once it's known whether this is a
+    // library.
     "compileOnly"("org.projectlombok:lombok:${version("lombok")}")
     "annotationProcessor"("org.projectlombok:lombok:${version("lombok")}")
     "testCompileOnly"("org.projectlombok:lombok:${version("lombok")}")
     "testAnnotationProcessor"("org.projectlombok:lombok:${version("lombok")}")
     "implementation"("org.slf4j:slf4j-api:${version("slf4j")}")
-    "runtimeOnly"("org.apache.logging.log4j:log4j-core:${version("log4j")}")
-    "runtimeOnly"("org.apache.logging.log4j:log4j-slf4j2-impl:${version("log4j")}")
 
     "testImplementation"(platform("org.junit:junit-bom:${version("junit")}"))
     "testImplementation"("org.junit.jupiter:junit-jupiter")
@@ -93,6 +100,14 @@ dependencies {
     "testRuntimeOnly"("org.junit.platform:junit-platform-launcher")
 
     "spotbugsPlugins"("com.h3xstream.findsecbugs:findsecbugs-plugin:${version("findsecbugs")}")
+}
+
+// An application logs through Log4j 2 at run time. A library (java-library) gets it for its own tests only: it leaves
+// its users to choose their logging, and its published dependencies name only the SLF4J API.
+val log4j = listOf("log4j-core", "log4j-slf4j2-impl").map { "org.apache.logging.log4j:$it:${version("log4j")}" }
+afterEvaluate {
+    val configuration = if (plugins.hasPlugin("java-library")) "testRuntimeOnly" else "runtimeOnly"
+    log4j.forEach { dependencies.add(configuration, it) }
 }
 
 tasks.withType<JavaCompile>().configureEach {
@@ -142,7 +157,8 @@ afterEvaluate {
 }
 
 // JaCoCo skips its verification when no test ran, which would let code with no tests pass the floor.
-val mainCode = extensions.getByType<SourceSetContainer>()["main"].allJava
+// A plain file collection, not the source set itself, which the configuration cache can't store.
+val mainCode = files(extensions.getByType<SourceSetContainer>()["main"].allJava)
 val coverageData =
     files(tasks.named<JacocoCoverageVerification>("jacocoTestCoverageVerification").map { it.executionData })
 val requireTests = tasks.register("requireTests") {
@@ -237,7 +253,6 @@ tasks.named("check") {
 }
 
 // ---------- Copy-paste detection: PMD's own CPD, run directly ----------
-val cpdMinimumTokens = 50
 val cpdTool = configurations.create("cpdTool") {
     isCanBeConsumed = false
     isCanBeResolved = true
@@ -248,7 +263,7 @@ dependencies {
 }
 val cpdCheck = tasks.register<JavaExec>("cpdCheck") {
     group = "verification"
-    description = "Fails if $cpdMinimumTokens or more tokens of Java code are copy-pasted (PMD's CPD)."
+    description = "Fails if underTest.cpdMinimumTokens (50) or more tokens of Java are copy-pasted (PMD's CPD)."
     val style = underTest.codeStyle
     onlyIf("underTest.codeStyle is not NONE") { style.get() != CodeStyleSource.NONE }
     // Every source set's Java folders, including those added after the plugin, such as integration tests.
@@ -259,39 +274,34 @@ val cpdCheck = tasks.register<JavaExec>("cpdCheck") {
     classpath = cpdTool
     mainClass = "net.sourceforge.pmd.cli.PmdCli"
     javaLauncher = toolchainLauncher
-    args("cpd", "--minimum-tokens", "$cpdMinimumTokens", "--language", "java", "--format", "text")
-    argumentProviders.add(CommandLineArgumentProvider { sources.files.sorted().flatMap { listOf("--dir", it.path) } })
+    val minimumTokens = underTest.cpdMinimumTokens
+    args("cpd", "--language", "java", "--format", "text")
+    argumentProviders.add(CommandLineArgumentProvider {
+        listOf("--minimum-tokens", "${minimumTokens.get()}") +
+            sources.files.sorted().flatMap { listOf("--dir", it.path) }
+    })
 }
 tasks.named("check") {
     dependsOn(cpdCheck)
 }
 
 // ---------- Package size: a package holding many classes is several packages ----------
-val maxClassesPerPackage = 20
-val notClasses = setOf("package-info.java", "module-info.java")
 val checkPackageSize = tasks.register("checkPackageSize") {
     group = "verification"
-    description = "Fails if a package holds more than $maxClassesPerPackage classes, in any source set."
+    description = "Fails if a package holds more than underTest.maxClassesPerPackage (20) classes, in any source set."
     val style = underTest.codeStyle
     onlyIf("underTest.codeStyle is not NONE") { style.get() != CodeStyleSource.NONE }
     val roots = provider { sourceSetsForAdvice.associate { it.name to it.java.srcDirs.filter(File::isDirectory) } }
-    val limit = maxClassesPerPackage
-    val skipped = notClasses
+    val limit = underTest.maxClassesPerPackage
     doLast {
         val tooBig = roots.get().flatMap { (sourceSet, dirs) ->
-            dirs.flatMap { root ->
-                root.walkTopDown().filter { it.isFile && it.extension == "java" && it.name !in skipped }
-                    .map { sourceSet to it.parentFile.relativeTo(root).invariantSeparatorsPath.replace('/', '.') }
-                    .toList()
+            JavaPackages.classCounts(dirs).filterValues { it > limit.get() }.map { (name, count) ->
+                "Package ${name.ifEmpty { "(default)" }} in $sourceSet has $count classes, " +
+                    "more than ${limit.get()}: split it into packages by what its classes do."
             }
-        }.groupingBy { it }.eachCount().filterValues { it > limit }
+        }
         if (tooBig.isNotEmpty()) {
-            throw GradleException(
-                tooBig.entries.sortedBy { it.key.second }.joinToString("\n") { (where, count) ->
-                    "Package ${where.second.ifEmpty { "(default)" }} in ${where.first} has $count classes, " +
-                        "more than $limit: split it into packages by what its classes do."
-                },
-            )
+            throw GradleException(tooBig.sorted().joinToString("\n"))
         }
     }
 }
@@ -362,31 +372,47 @@ if (providers.environmentVariable("CI").isPresent) {
     }
 }
 
-// ---------- Mutation testing (opt-in) ----------
-pitest {
-    pitestVersion = version("pitest")
-    junit5PluginVersion = version("pitest-junit5")
-    // The project's own classes: those in the packages its main code is in, whatever its group (or none).
-    val mainJava = sourceSetsForAdvice.named("main").map { it.java.srcDirs }
-    targetClasses = mainJava.map { roots ->
-        roots.flatMap { root ->
-            root.walkTopDown().filter { it.isFile && it.extension == "java" }
-                .map { it.parentFile.relativeTo(root).invariantSeparatorsPath.replace('/', '.') }.toList()
-        }.filter { it.isNotEmpty() }.distinct().sorted().map { "$it.*" }
-    }
-    outputFormats = listOf("HTML", "XML")
-    timestampedReports = false
-    fullMutationMatrix = true
-    verbosity = "QUIET"
+// ---------- Mutation testing (opt-in): PIT, run from its command line ----------
+val pitestTool = configurations.create("pitestTool") {
+    isCanBeConsumed = false
+    isCanBeResolved = true
 }
-
+dependencies {
+    pitestTool("org.pitest:pitest-command-line:${version("pitest")}")
+    pitestTool("org.pitest:pitest-junit5-plugin:${version("pitest-junit5")}")
+}
+val pitReports = layout.buildDirectory.dir("reports/pitest")
+val mainSourceSet = sourceSetsForAdvice.named("main")
 val mutationSummary = tasks.register<MutationSummaryTask>("mutationSummary") {
     group = "verification"
     description = "Summarises the last PIT run: coverage, planted bugs caught and missed, and where."
-    reportDir = layout.buildDirectory.dir("reports/pitest")
-    sourceDirs.from(sourceSetsForAdvice.named("main").map { it.java.srcDirs })
+    reportDir = pitReports
+    sourceDirs.from(mainSourceSet.map { it.java.srcDirs })
 }
-tasks.named<JavaExec>("pitest") {
+tasks.register<JavaExec>("pitest") {
+    group = "verification"
+    description = "Plants bugs (mutations) in the main code, runs the tests against each (PIT), and summarises."
+    dependsOn(tasks.named("testClasses"))
+    classpath = pitestTool + sourceSetsForAdvice["test"].runtimeClasspath
+    mainClass = "org.pitest.mutationtest.commandline.MutationCoverageReport"
+    javaLauncher = toolchainLauncher
+    // The project's own classes: those in the packages its main code is in, whatever its group (or none).
+    val sources = files(mainSourceSet.map { it.java.srcDirs }).filter { it.isDirectory }
+    val classes = files(mainSourceSet.map { it.output.classesDirs })
+    val reports = pitReports
+    argumentProviders.add(CommandLineArgumentProvider {
+        listOf(
+            "--targetClasses", JavaPackages.targets(sources.files).joinToString(","),
+            "--sourceDirs", sources.files.joinToString(","),
+            "--mutableCodePaths", classes.files.joinToString(","),
+            "--reportDir", reports.get().asFile.path,
+            "--outputFormats", "HTML,XML",
+            "--timestampedReports=false",
+            "--fullMutationMatrix=true",
+            "--verbosity", "QUIET",
+        )
+    })
+    // Only PIT's warnings and errors reach the console; mutationSummary says the rest in plain English.
     doFirst {
         val pit = this as JavaExec
         pit.standardOutput = OutputStream.nullOutputStream()

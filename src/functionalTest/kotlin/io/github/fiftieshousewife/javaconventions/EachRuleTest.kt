@@ -94,14 +94,22 @@ class EachRuleTest {
     @Test
     fun `each rule reports the breach made for it`(@TempDir dir: File) {
         val project = SampleProject(dir)
-        breaches.forEach { (path, source) -> project.main(path, source) }
+        (breaches + StyleBreaches.SAMPLES + ApiBreaches.SAMPLES)
+            .forEach { (path, source) -> project.main(path, source) }
         val output = project.buildAndFail("checkstyleMain", "pmdMain", "forbiddenApisMain", "--continue").output
         assertAll(
-            listOf(
-                "[FileLength]", "[CyclomaticComplexity]", "[BooleanExpressionComplexity]", "[ParameterNumber]",
-                "[RecordComponentNumber]", "A field has no comment", "[JavadocOnlyWhenPublic]", "CognitiveComplexity",
-                "ExcessiveParameterList", "Forbidden method invocation: java.lang.System#currentTimeMillis()",
-            ).map { expected -> Executable { assertThat(output).contains(expected) } },
+            (
+                listOf(
+                    "[FileLength]", "[CyclomaticComplexity]", "[BooleanExpressionComplexity]", "[ParameterNumber]",
+                    "[RecordComponentNumber]", "A field has no comment", "[JavadocOnlyWhenPublic]",
+                    "CognitiveComplexity", "ExcessiveParameterList", "java.lang.System#currentTimeMillis()",
+                ) + PMD_COMPLEXITY + StyleBreaches.REPORTS + ApiBreaches.REPORTS
+                ).map { expected -> Executable { assertThat(output).contains(expected) } },
         )
+    }
+
+    private companion object {
+        // PMD's own complexity findings, told apart from Checkstyle's modules of the same names.
+        val PMD_COMPLEXITY = listOf("\tCyclomaticComplexity:\t", "\tNPathComplexity:\t")
     }
 }

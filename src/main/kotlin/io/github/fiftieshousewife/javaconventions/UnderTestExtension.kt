@@ -26,6 +26,12 @@ abstract class UnderTestExtension {
     /** With [CodeStyleSource.ORGANISATION]: extra forbidden-API signatures, in addition to the bundled JDK sets. */
     abstract val forbiddenApiSignatures: RegularFileProperty
 
+    /** The fewest copied tokens of Java that fail the copy-paste check (50 unless changed). */
+    abstract val cpdMinimumTokens: Property<Int>
+
+    /** The most classes a package may hold, in any source set (20 unless changed). */
+    abstract val maxClassesPerPackage: Property<Int>
+
     /** Testing evidence: smallest line coverage a project may have, as a fraction (0.80 means 80%). */
     abstract val minLineCoverage: Property<java.math.BigDecimal>
 }

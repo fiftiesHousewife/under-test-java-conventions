@@ -16,7 +16,10 @@ plugins {
 // plugin's jar and POM carry nothing of it. detekt runs on the Kotlin it was built with, not the newer one Gradle has.
 detekt {
     buildUponDefaultConfig = true
-    source.setFrom("src/main/kotlin", "src/test/kotlin", "build.gradle.kts", "settings.gradle.kts")
+    config.setFrom("config/detekt.yml")
+    source.setFrom(
+        "src/main/kotlin", "src/test/kotlin", "src/functionalTest/kotlin", "build.gradle.kts", "settings.gradle.kts",
+    )
 }
 configurations.matching { it.name == "detekt" }.configureEach {
     resolutionStrategy.eachDependency {
@@ -29,7 +32,6 @@ configurations.matching { it.name == "detekt" }.configureEach {
 group = "io.github.fiftieshousewife"
 
 dependencies {
-    implementation(libs.gradle.pitest.plugin)
     implementation(libs.gradle.spotbugs.plugin)
     implementation(libs.gradle.forbiddenapis.plugin)
     implementation(libs.gradle.versions.plugin)
@@ -37,7 +39,6 @@ dependencies {
     testImplementation(platform(libs.junit.bom))
     testImplementation(libs.junit.jupiter)
     testImplementation(libs.assertj.core)
-    testImplementation(gradleTestKit())
     testRuntimeOnly(libs.junit.platform.launcher)
 }
 
@@ -45,7 +46,7 @@ dependencies {
 val catalog = extensions.getByType<VersionCatalogsExtension>().named("libs")
 val toolVersions = listOf(
     "java", "junit", "assertj", "lombok", "slf4j", "log4j", "jacoco", "checkstyle", "pmd", "spotbugs", "findsecbugs",
-    "pitest", "pitest-junit5", "min-line-coverage",
+    "pitest", "pitest-junit5", "min-line-coverage", "cpd-minimum-tokens", "max-classes-per-package",
 )
 val generatedResources = layout.buildDirectory.dir("generated/versions")
 val writeVersions = tasks.register<WriteProperties>("writeVersions") {
@@ -79,14 +80,34 @@ kotlin {
 // What would be published, and what PublishedPluginTest applies the plugin from.
 val localRepo = layout.buildDirectory.dir("local-repo")
 
-// The functional tests build sample projects with Gradle TestKit; they need the network the outer build has.
+// Unit tests: the plugin's classes, on their own, in seconds.
+tasks.test {
+    useJUnitPlatform()
+}
+
+// Functional tests: sample projects built with Gradle TestKit, in their own source set, as Gradle lays out a plugin's.
+val functionalTest: SourceSet = sourceSets.create("functionalTest")
+configurations[functionalTest.implementationConfigurationName].extendsFrom(configurations.testImplementation.get())
+configurations[functionalTest.runtimeOnlyConfigurationName].extendsFrom(configurations.testRuntimeOnly.get())
+dependencies {
+    "functionalTestImplementation"(gradleTestKit())
+}
+gradlePlugin {
+    testSourceSets(functionalTest)
+}
+
+// The sample builds need the network the outer build has.
 val proxySettings = listOf(
     "https.proxyHost", "https.proxyPort", "http.proxyHost", "http.proxyPort", "https.proxyUser", "https.proxyPassword",
     "http.proxyUser", "http.proxyPassword", "http.nonProxyHosts", "jdk.http.auth.tunneling.disabledSchemes",
 )
-tasks.test {
+val functionalTestTask = tasks.register<Test>("functionalTest") {
+    group = "verification"
+    description = "Builds sample projects with the plugin, with Gradle TestKit: each rule's breach, and clean code."
+    testClassesDirs = functionalTest.output.classesDirs
+    classpath = functionalTest.runtimeClasspath
     useJUnitPlatform()
-    maxParallelForks = 1
+    shouldRunAfter(tasks.test)
     // Where the sample builds find JDKs when Gradle can't detect them itself (as inside a sandbox).
     val jdkPaths = providers.gradleProperty("org.gradle.java.installations.paths")
     jvmArgumentProviders.add(CommandLineArgumentProvider {
@@ -106,6 +127,9 @@ tasks.test {
             "-Djavaconventions.oldestGradle=${oldestGradle.get()}",
         )
     })
+}
+tasks.check {
+    dependsOn(functionalTestTask)
 }
 
 publishing {
