@@ -1,0 +1,29 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  # The release workflow runs this first, and publishes only if it passes.
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      # Gradle runs on JDK 21, the oldest a build applying the plugin may run on (the last listed is the default);
+      # the sample builds compile with JDK 25, the Java the plugin sets.
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: |
+            25
+            21
+      - uses: gradle/actions/setup-gradle@v5
+      - name: Run all checks, including the sample builds of the plugin as published
+        run: ./gradlew check -Porg.gradle.java.installations.paths="$JAVA_HOME_25_X64"

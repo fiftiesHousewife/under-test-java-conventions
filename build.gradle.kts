@@ -1,6 +1,8 @@
 // The java-conventions plugin: the code-quality standards for all our Java, applied by each repo at a pinned version.
 // Its tool versions (from gradle/libs.versions.toml) and rule files go inside its jar, so a repo applying it reads
 // nothing of its own but an organisation's rule files, when it chooses them.
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
     `kotlin-dsl`
     `maven-publish`
@@ -40,14 +42,26 @@ sourceSets.main {
 }
 
 gradlePlugin {
-    website = "https://github.com/fiftiesHousewife/java-conventions"
-    vcsUrl = "https://github.com/fiftiesHousewife/java-conventions"
+    website = "https://github.com/fiftiesHousewife/under-test-java-conventions"
+    vcsUrl = "https://github.com/fiftiesHousewife/under-test-java-conventions"
 }
 
+// The plugin's classes run in the applying build's Gradle, so they target the oldest JDK it may run on, whichever JDK
+// builds them: Java 21.
 java {
     withSourcesJar()
     withJavadocJar()
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
 }
+kotlin {
+    compilerOptions {
+        jvmTarget = JvmTarget.JVM_21
+    }
+}
+
+// What would be published, and what PublishedPluginTest applies the plugin from.
+val localRepo = layout.buildDirectory.dir("local-repo")
 
 // The functional tests build sample projects with Gradle TestKit; they need the network the outer build has.
 val proxySettings = listOf(
@@ -63,13 +77,26 @@ tasks.test {
         proxySettings.mapNotNull { key -> System.getProperty(key)?.let { "-D$key=$it" } } +
             jdkPaths.map { listOf("-Djavaconventions.jdkPaths=$it") }.getOrElse(emptyList())
     })
+    // PublishedPluginTest applies the plugin as a user's build does: by id and version, from the published jar, POM
+    // and plugin marker, on this build's Gradle and on the oldest it supports.
+    dependsOn("publishAllPublicationsToLocalRepository")
+    val repo = localRepo
+    val pluginVersion = project.version.toString()
+    val oldestGradle = libs.versions.oldest.gradle
+    jvmArgumentProviders.add(CommandLineArgumentProvider {
+        listOf(
+            "-Djavaconventions.repo=${repo.get().asFile.absolutePath}",
+            "-Djavaconventions.version=$pluginVersion",
+            "-Djavaconventions.oldestGradle=${oldestGradle.get()}",
+        )
+    })
 }
 
 publishing {
     repositories {
         maven {
             name = "local"
-            url = uri(layout.buildDirectory.dir("local-repo"))
+            url = uri(localRepo)
         }
     }
     publications.withType<MavenPublication>().configureEach {
@@ -77,7 +104,7 @@ publishing {
             name = "java-conventions"
             description = "The code-quality standards for Java: Checkstyle, PMD and its copy-paste detector, SpotBugs " +
                 "with FindSecBugs, forbidden APIs and a coverage floor, as one Gradle plugin."
-            url = "https://github.com/fiftiesHousewife/java-conventions"
+            url = "https://github.com/fiftiesHousewife/under-test-java-conventions"
             licenses {
                 license {
                     name = "Apache License 2.0"
@@ -92,9 +119,9 @@ publishing {
                 }
             }
             scm {
-                url = "https://github.com/fiftiesHousewife/java-conventions"
-                connection = "scm:git:https://github.com/fiftiesHousewife/java-conventions.git"
-                developerConnection = "scm:git:https://github.com/fiftiesHousewife/java-conventions.git"
+                url = "https://github.com/fiftiesHousewife/under-test-java-conventions"
+                connection = "scm:git:https://github.com/fiftiesHousewife/under-test-java-conventions.git"
+                developerConnection = "scm:git:https://github.com/fiftiesHousewife/under-test-java-conventions.git"
             }
         }
     }

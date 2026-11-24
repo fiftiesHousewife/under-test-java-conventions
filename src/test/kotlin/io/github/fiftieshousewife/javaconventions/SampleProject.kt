@@ -4,24 +4,32 @@ import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.GradleRunner
 import java.io.File
 
-/** A small Java project applying the plugin, built with Gradle TestKit. */
-class SampleProject(private val dir: File) {
+/**
+ * A small Java project applying the plugin, built with Gradle TestKit. By default the plugin under test is put on its
+ * class path; [published] instead applies it as a user's build does, by id and version from the repository this build
+ * publishes to, so its jar, POM and plugin marker are what's tested.
+ */
+class SampleProject(private val dir: File, private val published: Boolean = false) {
+
+    private var gradleVersion: String? = null
 
     init {
         dir.resolve("settings.gradle.kts").writeText(
-            """
-            dependencyResolutionManagement {
-                repositories {
-                    mavenCentral()
+            (if (published) publishedPluginManagement() else "") +
+                """
+                dependencyResolutionManagement {
+                    repositories {
+                        mavenCentral()
+                    }
                 }
-            }
-            rootProject.name = "sample"
-            """.trimIndent(),
+                rootProject.name = "sample"
+                """.trimIndent(),
         )
+        val version = if (published) " version \"${property("javaconventions.version")}\"" else ""
         dir.resolve("build.gradle.kts").writeText(
             """
             plugins {
-                id("io.github.fiftieshousewife.java-conventions")
+                id("io.github.fiftieshousewife.java-conventions")$version
             }
             group = "com.example"
             """.trimIndent(),
@@ -34,6 +42,9 @@ class SampleProject(private val dir: File) {
 
     fun file(path: String): File = dir.resolve(path)
 
+    /** Builds with the given Gradle version, downloaded by TestKit, instead of the Gradle running this build. */
+    fun onGradle(version: String): SampleProject = apply { gradleVersion = version }
+
     fun build(vararg arguments: String): BuildResult = runner(arguments).build()
 
     fun buildAndFail(vararg arguments: String): BuildResult = runner(arguments).buildAndFail()
@@ -44,7 +55,8 @@ class SampleProject(private val dir: File) {
 
     private fun runner(arguments: Array<out String>): GradleRunner = GradleRunner.create()
         .withProjectDir(dir)
-        .withPluginClasspath()
+        .apply { if (!published) withPluginClasspath() }
+        .apply { gradleVersion?.let { withGradleVersion(it) } }
         .withArguments(listOf("--stacktrace") + proxyArguments() + arguments)
         .forwardOutput()
 
@@ -58,5 +70,20 @@ class SampleProject(private val dir: File) {
             "https.proxyPassword", "http.proxyUser", "http.proxyPassword", "http.nonProxyHosts",
             "jdk.http.auth.tunneling.disabledSchemes",
         )
+
+        fun property(name: String): String =
+            requireNotNull(System.getProperty(name)) { "$name is set by the build's test task; run the tests with Gradle" }
+
+        // The README's repositories, with the repository this build publishes to first.
+        fun publishedPluginManagement(): String = listOf(
+            "pluginManagement {",
+            "    repositories {",
+            "        maven { url = uri(\"${File(property("javaconventions.repo")).toURI()}\") }",
+            "        gradlePluginPortal()",
+            "        mavenCentral()",
+            "    }",
+            "}",
+            "",
+        ).joinToString("\n")
     }
 }

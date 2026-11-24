@@ -25,6 +25,9 @@ gradle-forbiddenapis-plugin = "3.11"
 gradle-versions-plugin = "0.67.0"
 nmcp = "1.6.2"
 
+# The oldest Gradle the plugin supports, tested by PublishedPluginTest: the first to run on, and fully support, Java 25
+oldest-gradle = "9.1.0"
+
 [libraries]
 gradle-pitest-plugin = { module = "info.solidsoft.gradle.pitest:gradle-pitest-plugin", version.ref = "gradle-pitest-plugin" }
 gradle-spotbugs-plugin = { module = "com.github.spotbugs.snom:spotbugs-gradle-plugin", version.ref = "gradle-spotbugs-plugin" }

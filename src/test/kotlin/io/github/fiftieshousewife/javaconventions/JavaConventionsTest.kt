@@ -8,36 +8,9 @@ import java.io.File
 
 class JavaConventionsTest {
 
-    private val greeting = """
-        package com.example;
-
-        public class Greeting {
-            public String greet(final String name) {
-                return "Hello, " + name;
-            }
-        }
-    """
-
-    private val greetingTest = """
-        package com.example;
-
-        import static org.assertj.core.api.Assertions.assertThat;
-
-        import org.junit.jupiter.api.Test;
-
-        class GreetingTest {
-            @Test
-            void greetsByName() {
-                assertThat(new Greeting().greet("Ada")).isEqualTo("Hello, Ada");
-            }
-        }
-    """
-
     @Test
     fun `a project that meets the standards passes check`(@TempDir dir: File) {
-        val result = SampleProject(dir).main("com/example/Greeting.java", greeting)
-            .test("com/example/GreetingTest.java", greetingTest)
-            .build("check")
+        val result = CleanSample.into(SampleProject(dir)).build("check")
         assertThat(result.task(":check")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
     }
 
@@ -78,7 +51,7 @@ class JavaConventionsTest {
 
     @Test
     fun `a test making two assertion statements fails PMD`(@TempDir dir: File) {
-        val result = SampleProject(dir).main("com/example/Greeting.java", greeting).test(
+        val result = SampleProject(dir).main("com/example/Greeting.java", CleanSample.GREETING).test(
             "com/example/GreetingTest.java",
             """
             package com.example;

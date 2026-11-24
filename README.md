@@ -26,6 +26,8 @@ plugins {
 }
 ```
 
+It needs Gradle 9.1 or later, running on JDK 21 or later, and a JDK 25 for the toolchain.
+
 `./gradlew check` then fails on any breach of the standards below, and `pmdAdvice` reports advice that never fails
 the build.
 
@@ -63,9 +65,18 @@ for every build. A repo's own SpotBugs exclusions stay in the repo (`excludeFilt
 ## Building it
 
 `./gradlew check` runs the functional tests, which build small sample projects with Gradle TestKit; they need a JDK
-25 that Gradle can find (or `-Porg.gradle.java.installations.paths=<its home>`). `./gradlew publishAllPublicationsToLocalRepository`
-shows what would be published; publishing to Maven Central needs the signing key and a Central Portal token (see
-[build.gradle.kts](build.gradle.kts)). See [AGENTS.md](AGENTS.md).
+25 that Gradle can find (or `-Porg.gradle.java.installations.paths=<its home>`). They include the plugin as
+published: `check` publishes it to `build/local-repo` (what would go to Maven Central), and a sample build applies it
+from there by id and version, on this build's Gradle and on the oldest supported (`oldest-gradle` in
+[libs.versions.toml](gradle/libs.versions.toml)). See [AGENTS.md](AGENTS.md).
+
+## Releasing
+
+Push a version tag, such as `v0.1.0`. The [release workflow](.github/workflows/release.yml) runs every check, then
+publishes that version to Maven Central and makes a GitHub release, with `docs/releases/<version>.md` as its notes when
+there is one. It needs four repository secrets: `CENTRAL_PORTAL_USERNAME` and `CENTRAL_PORTAL_PASSWORD` (a Central
+Portal user token), and `SIGNING_KEY` and `SIGNING_KEY_PASSWORD` (an ASCII-armoured PGP private key and its
+passphrase). A release on Maven Central can't be changed or removed.
 
 ## Licence
 
