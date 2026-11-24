@@ -5,7 +5,7 @@ import org.gradle.testkit.runner.GradleRunner
 import java.io.File
 
 /**
- * A small Java project applying the plugin, built with Gradle TestKit. By default the plugin under test is put on its
+ * A small Java project applying the plugin, built with Gradle TestKit. By default the plugin being tested is put on its
  * class path; [published] instead applies it as a user's build does, by id and version from the repository this build
  * publishes to, so its jar, POM and plugin marker are what's tested.
  */

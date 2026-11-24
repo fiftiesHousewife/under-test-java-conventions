@@ -1,13 +1,11 @@
 # java-conventions
 
-**The code-quality standards for all our Java, as one Gradle plugin: each repo applies a pinned version instead of
+**One set of code-quality standards for Java, as one Gradle plugin: each repo applies a pinned version instead of
 keeping its own copy of the rules.**
 
 It applies Checkstyle, PMD and its copy-paste detector, SpotBugs with FindSecBugs, forbidden APIs and a coverage
-floor, with the rule files and tool versions inside the plugin. It is the decision of
-[under-test](https://github.com/fiftiesHousewife/under-test) that all its Java, and its tools' (connection-paths,
-under-test-tools), follow one set of standards
-([why](https://github.com/fiftiesHousewife/under-test/blob/main/docs/decisions/0082-all-our-java-follows-one-set-of-code-quality-standards-a-plugin-published-to-maven-central-that-every-repo-applies.md)).
+floor, with the rule files and tool versions inside the plugin. Why each standard is what it is:
+[docs/decisions](docs/decisions/README.md).
 
 ## Using it
 
@@ -70,6 +68,13 @@ for every build. A repo's own SpotBugs exclusions stay in the repo (`excludeFilt
 published: `check` publishes it to `build/local-repo` (what would go to Maven Central), and a sample build applies it
 from there by id and version, on this build's Gradle and on the oldest supported (`oldest-gradle` in
 [libs.versions.toml](gradle/libs.versions.toml)). See [AGENTS.md](AGENTS.md).
+
+### Memory
+
+The build's Gradle daemon needs **2 GiB of heap and 1 GiB of metaspace**: detekt and the Kotlin compiler run inside it,
+and Gradle's defaults (512 MiB heap, 384 MiB metaspace) run out. [gradle.properties](gradle.properties) sets them
+(`org.gradle.jvmargs`); allow about 3 GiB free for it, and more for the sample builds the functional tests start,
+one at a time. This is this repo's build only: a build applying the plugin needs no more memory for it.
 
 ## Releasing
 

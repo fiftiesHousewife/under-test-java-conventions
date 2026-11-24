@@ -1,5 +1,4 @@
-// The code-quality standards for all our Java. Three layers (see under-test's decision guides on using the toolkit in
-// an organisation):
+// One set of code-quality standards for Java (why each is what it is: docs/decisions). Three layers:
 //  - environment (proxy, package repository): never set here; it comes from the organisation's Gradle init script;
 //  - code-quality standards: Checkstyle, PMD (complexity, the assertAll rule), copy-paste detection, SpotBugs with
 //    FindSecBugs, forbidden APIs. The rules inside this plugin are defaults: `underTest.codeStyle` = TOOLKIT,

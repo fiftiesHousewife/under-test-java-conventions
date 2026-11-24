@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ruleset name="under-test"
+<ruleset name="java-conventions"
          xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 https://pmd.sourceforge.io/ruleset_2_0_0.xsd">
     <description>
-        The failing rules: the cleancode plugin's curated rule, complexity limits, and the test standard that a test with more than one assertion wraps them in assertAll.
-        See the README. Advice that is reported but doesn't fail the build is in pmd-advice.xml.
+        The failing rules: complexity limits, the parameter limit, and the test standard that a test makes exactly one
+        assertion statement (several checks in one assertAll). Why each: docs/decisions. Advice that is reported but
+        doesn't fail the build is in pmd-advice.xml.
     </description>
 
     <rule ref="category/java/errorprone.xml/AvoidFieldNameMatchingMethodName"/>
