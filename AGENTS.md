@@ -49,8 +49,9 @@ Push a version tag, such as `v0.1.0`. The [release workflow](.github/workflows/r
 publishes that version to Maven Central and makes a GitHub release, with `docs/releases/<version>.md` as its notes when
 there is one. It needs four repository secrets: `CENTRAL_PORTAL_USERNAME` and `CENTRAL_PORTAL_PASSWORD` (a Central
 Portal user token), and `SIGNING_KEY` and `SIGNING_KEY_PASSWORD` (an ASCII-armoured PGP private key and its
-passphrase). A release on Maven Central can't be changed or removed. Then raise `version` in `gradle.properties`, and
-the version in the README's "Using it".
+passphrase). A release on Maven Central can't be changed or removed. The tag's version is published, whatever
+`gradle.properties` says. Then set the README's "Using it" to the released version, and raise `version` in
+`gradle.properties` to the next one.
 
 ## Before you finish
 Run `./gradlew check`. It must pass.
