@@ -31,6 +31,11 @@ configurations.matching { it.name == "detekt" }.configureEach {
 
 group = "io.github.fiftieshousewife"
 
+// The jars are java-conventions-<version>*.jar whatever the project is called, as the release workflow attaches them.
+base {
+    archivesName = "java-conventions"
+}
+
 dependencies {
     implementation(libs.gradle.forbiddenapis.plugin)
     implementation(libs.gradle.versions.plugin)
