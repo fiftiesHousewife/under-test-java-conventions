@@ -4,8 +4,8 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 https://pmd.sourceforge.io/ruleset_2_0_0.xsd">
     <description>
-        Rules for this repository: the cleancode plugin's curated rule, complexity limits, and the test standard that a test with more than one assertion wraps them in assertAll.
-        See AGENTS.md. Advice that is reported but doesn't fail the build is in advice.xml.
+        The failing rules: the cleancode plugin's curated rule, complexity limits, and the test standard that a test with more than one assertion wraps them in assertAll.
+        See the README. Advice that is reported but doesn't fail the build is in pmd-advice.xml.
     </description>
 
     <rule ref="category/java/errorprone.xml/AvoidFieldNameMatchingMethodName"/>

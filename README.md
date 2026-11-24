@@ -43,7 +43,7 @@ the build.
 | No copy-pasted code (75 tokens or more) | PMD's copy-paste detector |
 | No bug patterns or security bugs | SpotBugs with FindSecBugs |
 | No unsafe, deprecated, internal or non-portable JDK APIs, no `System.out`, no reflection tricks; time from an injected `Clock` | forbidden APIs |
-| Line coverage at least 80% (raise it with `underTest.minLineCoverage`) | JaCoCo |
+| Line coverage at least 80% (raise it with `underTest.minLineCoverage`); code with no tests fails too | JaCoCo |
 | Final local variables, braces always, no star imports | Checkstyle |
 | Advice, never failing the build: a stream or `forEach` rather than a for-each loop | PMD, in `pmdAdvice` |
 

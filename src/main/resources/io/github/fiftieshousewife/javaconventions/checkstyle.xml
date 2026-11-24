@@ -4,7 +4,7 @@
     "https://checkstyle.org/dtds/configuration_1_3.dtd">
 <!--
   Based on the rules bundled in the io.github.fiftieshousewife.cleancode plugin, with every finding an error
-  and the standards in AGENTS.md added:
+  and the standards in the README added:
   - no more than three parameters for any method or constructor (use a Lombok @Builder instead);
   - no more than three components in a record (use a Lombok @Builder class instead of a large record);
   - complexity limits;

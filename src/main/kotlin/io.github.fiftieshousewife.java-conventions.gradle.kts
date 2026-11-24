@@ -134,8 +134,28 @@ tasks.named<JacocoCoverageVerification>("jacocoTestCoverageVerification") {
     }
 }
 
+// JaCoCo skips its verification when no test ran, which would let code with no tests pass the floor.
+val mainCode = extensions.getByType<SourceSetContainer>()["main"].allJava
+val coverageData = files(tasks.named<JacocoCoverageVerification>("jacocoTestCoverageVerification").map { it.executionData })
+val requireTests = tasks.register("requireTests") {
+    group = "verification"
+    description = "Fails when there is main code but no test ran, so the coverage floor can't be skipped."
+    dependsOn(tasks.named("test"))
+    val code = mainCode
+    val data = coverageData
+    val floor = underTest.minLineCoverage
+    doLast {
+        if (floor.get().signum() > 0 && !code.isEmpty && data.none { it.exists() }) {
+            throw GradleException(
+                "There is main code but no test ran, so its line coverage is 0%, below the minimum of " +
+                    "${floor.get().movePointRight(2).stripTrailingZeros().toPlainString()}%: add tests.",
+            )
+        }
+    }
+}
+
 tasks.named("check") {
-    dependsOn(tasks.named("jacocoTestCoverageVerification"))
+    dependsOn(tasks.named("jacocoTestCoverageVerification"), requireTests)
 }
 
 // ---------- Code-quality standards (replaceable; see underTest.codeStyle) ----------

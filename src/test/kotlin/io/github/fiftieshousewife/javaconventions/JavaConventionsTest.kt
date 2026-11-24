@@ -15,6 +15,12 @@ class JavaConventionsTest {
     }
 
     @Test
+    fun `a project with code but no tests fails the coverage floor`(@TempDir dir: File) {
+        val result = SampleProject(dir).main("com/example/Greeting.java", CleanSample.GREETING).buildAndFail("check")
+        assertThat(result.output).contains("There is main code but no test ran, so its line coverage is 0%")
+    }
+
+    @Test
     fun `a method of more than twenty lines fails Checkstyle`(@TempDir dir: File) {
         val lines = (1..21).joinToString("\n") { "        total += $it;" }
         val result = SampleProject(dir).main(

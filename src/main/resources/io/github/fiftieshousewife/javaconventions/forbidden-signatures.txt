@@ -1,4 +1,4 @@
-# Project-specific forbidden APIs, on top of the bundled JDK signature sets. See AGENTS.md.
+# Forbidden APIs, on top of the bundled JDK signature sets. See the README.
 @defaultMessage Use Lombok @Slf4j (SLF4J API, Log4j 2 at run time) for logging
 java.util.logging.Logger
 java.util.logging.Logger#getLogger(java.lang.String)

@@ -4,7 +4,7 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 https://pmd.sourceforge.io/ruleset_2_0_0.xsd">
     <description>
-        Advice: rules whose findings are reported, by the pmdAdvice task, but don't fail the build. See AGENTS.md.
+        Advice: rules whose findings are reported, by the pmdAdvice task, but don't fail the build. See the README.
     </description>
 
     <rule name="PreferStreamsToForEachLoops"
