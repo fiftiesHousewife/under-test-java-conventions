@@ -40,7 +40,7 @@ the build.
 | No more than three parameters, and no record with more than three components | Checkstyle, PMD |
 | One assertion statement per test: one `assert...`/`assertThat` chain, or one `assertAll(...)` | PMD |
 | No comment on a field; Javadoc only on public API | Checkstyle |
-| No copy-pasted code (75 tokens or more) | PMD's copy-paste detector |
+| No copy-pasted code (50 tokens or more) | PMD's copy-paste detector |
 | No bug patterns or security bugs | SpotBugs with FindSecBugs |
 | No unsafe, deprecated, internal or non-portable JDK APIs, no `System.out`, no reflection tricks; time from an injected `Clock` | forbidden APIs |
 | Line coverage at least 80% (raise it with `underTest.minLineCoverage`); code with no tests fails too | JaCoCo |

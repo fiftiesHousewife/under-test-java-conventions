@@ -124,11 +124,17 @@ tasks.named<JacocoReport>("jacocoTestReport") {
 
 tasks.named<JacocoCoverageVerification>("jacocoTestCoverageVerification") {
     dependsOn(tasks.named("test"))
-    violationRules {
-        rule {
-            limit {
-                counter = "LINE"
-                minimum = underTest.minLineCoverage.get()
+}
+
+// The settings are read once the build script has set them, even if a task was created before then.
+afterEvaluate {
+    tasks.named<JacocoCoverageVerification>("jacocoTestCoverageVerification") {
+        violationRules {
+            rule {
+                limit {
+                    counter = "LINE"
+                    minimum = underTest.minLineCoverage.get()
+                }
             }
         }
     }
@@ -172,9 +178,23 @@ checkstyle {
     maxWarnings = 0
 }
 
-tasks.withType<Checkstyle>().configureEach {
-    if (!useOrganisationFile(underTest.checkstyleConfig, "checkstyleConfig") { configFile = it; configDirectory = it.parentFile }) {
-        config = bundledRules("checkstyle.xml")
+// Whose rules each check uses is chosen once the build script has set underTest, even for a task created before then.
+val advice = "pmdAdvice"
+afterEvaluate {
+    tasks.withType<Checkstyle>().configureEach {
+        if (!useOrganisationFile(underTest.checkstyleConfig, "checkstyleConfig") { configFile = it; configDirectory = it.parentFile }) {
+            config = bundledRules("checkstyle.xml")
+        }
+    }
+    tasks.withType<Pmd>().configureEach {
+        if (name != advice && !useOrganisationFile(underTest.pmdRuleset, "pmdRuleset") { ruleSetFiles = files(it) }) {
+            ruleSetConfig = bundledRules("pmd-ruleset.xml")
+        }
+    }
+    tasks.withType<CheckForbiddenApis>().configureEach {
+        if (!useOrganisationFile(underTest.forbiddenApiSignatures, "forbiddenApiSignatures") { signaturesFiles = files(it) }) {
+            signaturesURLs = setOf(bundled.getResource("forbidden-signatures.txt")!!)
+        }
     }
 }
 
@@ -185,11 +205,7 @@ pmd {
     isIgnoreFailures = false
 }
 
-val advice = "pmdAdvice"
 tasks.withType<Pmd>().configureEach {
-    if (name != advice && !useOrganisationFile(underTest.pmdRuleset, "pmdRuleset") { ruleSetFiles = files(it) }) {
-        ruleSetConfig = bundledRules("pmd-ruleset.xml")
-    }
     // The JDK's own classes, from the toolchain, so PMD resolves types against the JDK the code is built with.
     val jdkClasses = toolchainLauncher.map { it.metadata.installationPath.file("lib/jrt-fs.jar") }
     classpath = (classpath ?: files()).plus(files(jdkClasses))
@@ -212,6 +228,7 @@ tasks.named("check") {
 }
 
 // ---------- Copy-paste detection: PMD's own CPD, run directly ----------
+val cpdMinimumTokens = 50
 val cpdTool = configurations.create("cpdTool") {
     isCanBeConsumed = false
     isCanBeResolved = true
@@ -222,15 +239,18 @@ dependencies {
 }
 val cpdCheck = tasks.register<JavaExec>("cpdCheck") {
     group = "verification"
-    description = "Fails if 75 or more tokens of Java code are copy-pasted (PMD's CPD)."
+    description = "Fails if $cpdMinimumTokens or more tokens of Java code are copy-pasted (PMD's CPD)."
     val style = underTest.codeStyle
     onlyIf("underTest.codeStyle is not NONE") { style.get() != CodeStyleSource.NONE }
-    val sources = files("src/main/java", "src/test/java", "src/integrationTest/java").filter { it.isDirectory }
+    // Every source set's Java folders, including those added after the plugin, such as integration tests.
+    val sources = files(provider { sourceSetsForAdvice.flatMap { it.java.srcDirs } }).filter { it.isDirectory }
+    val javaFiles = sources.asFileTree.matching { include("**/*.java") }
+    onlyIf("there is Java code") { !javaFiles.isEmpty }
     inputs.files(sources).withPathSensitivity(PathSensitivity.RELATIVE)
     classpath = cpdTool
     mainClass = "net.sourceforge.pmd.cli.PmdCli"
     javaLauncher = toolchainLauncher
-    args("cpd", "--minimum-tokens", "75", "--language", "java", "--format", "text")
+    args("cpd", "--minimum-tokens", "$cpdMinimumTokens", "--language", "java", "--format", "text")
     argumentProviders.add(CommandLineArgumentProvider { sources.files.sorted().flatMap { listOf("--dir", it.path) } })
 }
 tasks.named("check") {
@@ -260,12 +280,6 @@ forbiddenApis {
         "jdk-reflection",
     )
     ignoreFailures = false
-}
-
-tasks.withType<CheckForbiddenApis>().configureEach {
-    if (!useOrganisationFile(underTest.forbiddenApiSignatures, "forbiddenApiSignatures") { signaturesFiles = files(it) }) {
-        signaturesURLs = setOf(bundled.getResource("forbidden-signatures.txt")!!)
-    }
 }
 
 // ---------- Out-of-date dependencies ----------
@@ -309,7 +323,14 @@ if (providers.environmentVariable("CI").isPresent) {
 pitest {
     pitestVersion = version("pitest")
     junit5PluginVersion = version("pitest-junit5")
-    targetClasses = provider { listOf("${project.group}.*") }
+    // The project's own classes: those in the packages its main code is in, whatever its group (or none).
+    val mainJava = sourceSetsForAdvice.named("main").map { it.java.srcDirs }
+    targetClasses = mainJava.map { roots ->
+        roots.flatMap { root ->
+            root.walkTopDown().filter { it.isFile && it.extension == "java" }
+                .map { it.parentFile.relativeTo(root).invariantSeparatorsPath.replace('/', '.') }.toList()
+        }.filter { it.isNotEmpty() }.distinct().sorted().map { "$it.*" }
+    }
     outputFormats = listOf("HTML", "XML")
     timestampedReports = false
     fullMutationMatrix = true

@@ -42,6 +42,11 @@ class SampleProject(private val dir: File, private val published: Boolean = fals
 
     fun file(path: String): File = dir.resolve(path)
 
+    /** Adds lines to the end of the sample's build script, after its plugins block and group. */
+    fun buildScript(lines: String): SampleProject = apply {
+        dir.resolve("build.gradle.kts").appendText("\n" + lines.trimIndent() + "\n")
+    }
+
     /** Builds with the given Gradle version, downloaded by TestKit, instead of the Gradle running this build. */
     fun onGradle(version: String): SampleProject = apply { gradleVersion = version }
 
@@ -49,7 +54,8 @@ class SampleProject(private val dir: File, private val published: Boolean = fals
 
     fun buildAndFail(vararg arguments: String): BuildResult = runner(arguments).buildAndFail()
 
-    private fun write(path: String, source: String): SampleProject = apply {
+    /** Writes a file at a path relative to the sample project. */
+    fun write(path: String, source: String): SampleProject = apply {
         dir.resolve(path).apply { parentFile.mkdirs() }.writeText(source.trimIndent())
     }
 

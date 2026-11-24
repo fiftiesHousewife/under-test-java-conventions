@@ -13,4 +13,4 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "java-conventions"
+rootProject.name = "under-test-java-conventions"
