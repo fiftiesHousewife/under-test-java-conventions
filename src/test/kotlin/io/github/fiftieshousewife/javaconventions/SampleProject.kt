@@ -68,7 +68,9 @@ class SampleProject(private val dir: File, private val published: Boolean = fals
 
     private fun proxyArguments(): List<String> = PROXY_SETTINGS.mapNotNull { key ->
         System.getProperty(key)?.let { "-D$key=$it" }
-    } + listOfNotNull(System.getProperty("javaconventions.jdkPaths")?.let { "-Porg.gradle.java.installations.paths=$it" })
+    } + listOfNotNull(
+        System.getProperty("javaconventions.jdkPaths")?.let { "-Porg.gradle.java.installations.paths=$it" },
+    )
 
     private companion object {
         val PROXY_SETTINGS = listOf(
@@ -78,7 +80,9 @@ class SampleProject(private val dir: File, private val published: Boolean = fals
         )
 
         fun property(name: String): String =
-            requireNotNull(System.getProperty(name)) { "$name is set by the build's test task; run the tests with Gradle" }
+            requireNotNull(System.getProperty(name)) {
+                "$name is set by the build's test task; run the tests with Gradle"
+            }
 
         // The README's repositories, with the repository this build publishes to first.
         fun publishedPluginManagement(): String = listOf(

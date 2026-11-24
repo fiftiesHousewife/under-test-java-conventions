@@ -38,9 +38,10 @@ the build.
 | Methods of 20 lines or fewer; files of 150 lines or fewer; lines of 120 characters or fewer | Checkstyle |
 | Cyclomatic complexity 5 or less, cognitive complexity 6 or less, NPath complexity under 50; boolean expressions of 3 operators or fewer | Checkstyle and PMD |
 | No more than three parameters, and no record with more than three components | Checkstyle, PMD |
-| One assertion statement per test: one `assert...`/`assertThat` chain, or one `assertAll(...)` | PMD |
-| No comment on a field; Javadoc only on public API | Checkstyle |
+| Exactly one assertion statement per test: one `assert...`/`assertThat` chain, or one `assertAll(...)` grouping several; a test with none fails | PMD |
+| No comment on a field or an enum entry; Javadoc only on public API | Checkstyle |
 | No copy-pasted code (50 tokens or more) | PMD's copy-paste detector |
+| No package of more than 20 classes, in any source set | The plugin (`checkPackageSize`) |
 | No bug patterns or security bugs | SpotBugs with FindSecBugs |
 | No unsafe, deprecated, internal or non-portable JDK APIs, no `System.out`, no reflection tricks; time from an injected `Clock` | forbidden APIs |
 | Line coverage at least 80% (raise it with `underTest.minLineCoverage`); code with no tests fails too | JaCoCo |
@@ -64,7 +65,7 @@ for every build. A repo's own SpotBugs exclusions stay in the repo (`excludeFilt
 
 ## Building it
 
-`./gradlew check` runs the functional tests, which build small sample projects with Gradle TestKit; they need a JDK
+`./gradlew check` runs detekt on this repo's own Kotlin (here only: a build applying the plugin gets none of it) and the functional tests, which build small sample projects with Gradle TestKit; they need a JDK
 25 that Gradle can find (or `-Porg.gradle.java.installations.paths=<its home>`). They include the plugin as
 published: `check` publishes it to `build/local-repo` (what would go to Maven Central), and a sample build applies it
 from there by id and version, on this build's Gradle and on the oldest supported (`oldest-gradle` in

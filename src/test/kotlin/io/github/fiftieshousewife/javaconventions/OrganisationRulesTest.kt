@@ -8,11 +8,14 @@ import java.io.File
 
 class OrganisationRulesTest {
 
-    private val longMethod = "package com.example;\n\npublic class Long {\n    public int sum() {\n        int total = 0;\n" +
+    private val longMethod = "package com.example;\n\npublic class Long {\n    public int sum() {\n" +
+        "        int total = 0;\n" +
         (1..21).joinToString("\n") { "        total += $it;" } + "\n        return total;\n    }\n}\n"
 
     @Test
-    fun `the organisation's Checkstyle file is used, even for a task created before underTest is set`(@TempDir dir: File) {
+    fun `the organisation's Checkstyle file is used, even by a task created before underTest is set`(
+        @TempDir dir: File,
+    ) {
         val result = SampleProject(dir)
             .write(
                 "config/checkstyle.xml",

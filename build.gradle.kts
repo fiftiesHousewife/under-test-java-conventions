@@ -9,6 +9,21 @@ plugins {
     signing
     alias(libs.plugins.nmcp)
     alias(libs.plugins.nmcp.aggregation)
+    alias(libs.plugins.detekt)
+}
+
+// detekt checks this repo's own Kotlin, the plugin and its tests, as part of check. It's in this build only: the
+// plugin's jar and POM carry nothing of it. detekt runs on the Kotlin it was built with, not the newer one Gradle has.
+detekt {
+    buildUponDefaultConfig = true
+    source.setFrom("src/main/kotlin", "src/test/kotlin", "build.gradle.kts", "settings.gradle.kts")
+}
+configurations.matching { it.name == "detekt" }.configureEach {
+    resolutionStrategy.eachDependency {
+        if (requested.group == "org.jetbrains.kotlin") {
+            useVersion(libs.versions.detekt.kotlin.get())
+        }
+    }
 }
 
 group = "io.github.fiftieshousewife"
@@ -34,7 +49,8 @@ val toolVersions = listOf(
 )
 val generatedResources = layout.buildDirectory.dir("generated/versions")
 val writeVersions = tasks.register<WriteProperties>("writeVersions") {
-    destinationFile = generatedResources.map { it.file("io/github/fiftieshousewife/javaconventions/versions.properties") }
+    destinationFile =
+        generatedResources.map { it.file("io/github/fiftieshousewife/javaconventions/versions.properties") }
     toolVersions.forEach { property(it, catalog.findVersion(it).get().requiredVersion) }
 }
 sourceSets.main {
@@ -102,8 +118,8 @@ publishing {
     publications.withType<MavenPublication>().configureEach {
         pom {
             name = "java-conventions"
-            description = "The code-quality standards for Java: Checkstyle, PMD and its copy-paste detector, SpotBugs " +
-                "with FindSecBugs, forbidden APIs and a coverage floor, as one Gradle plugin."
+            description = "The code-quality standards for Java: Checkstyle, PMD and its copy-paste detector, " +
+                "SpotBugs with FindSecBugs, forbidden APIs and a coverage floor, as one Gradle plugin."
             url = "https://github.com/fiftiesHousewife/under-test-java-conventions"
             licenses {
                 license {

@@ -51,7 +51,7 @@ abstract class MutationSummaryTask : DefaultTask() {
         report("Caught - a test failed, as it should:", caught, "failed")
         report("Missed - every test that ran still passed:", missed, "passed")
         logger.quiet("")
-        val score = if (mutations.isEmpty()) 0 else caught.size * 100 / mutations.size
+        val score = if (mutations.isEmpty()) 0 else caught.size * PERCENT / mutations.size
         logger.quiet("Result: the tests caught ${caught.size} of ${mutations.size} planted bugs ($score%).")
     }
 
@@ -63,8 +63,9 @@ abstract class MutationSummaryTask : DefaultTask() {
         logger.quiet(heading)
         mutations.sortedBy { it.where.second }.forEach { mutation ->
             val code = sourceLine(mutation.where.first, mutation.where.second).take(CODE_WIDTH).padEnd(CODE_WIDTH)
-            val line = mutation.where.second.toString().padEnd(3)
-            logger.quiet("  line $line $code ${mutation.description.padEnd(DESCRIPTION_WIDTH)} $verb: ${names(mutation.tests)}")
+            val line = mutation.where.second.toString().padEnd(LINE_NUMBER_WIDTH)
+            val description = mutation.description.padEnd(DESCRIPTION_WIDTH)
+            logger.quiet("  line $line $code $description $verb: ${names(mutation.tests)}")
         }
     }
 
@@ -87,7 +88,10 @@ abstract class MutationSummaryTask : DefaultTask() {
     private fun parse(block: String): Mutation {
         fun field(name: String) = Regex("<$name>([^<]*)</$name>").find(block)?.groupValues?.get(1).orEmpty()
         val status = Regex("status='([A-Z_]+)'").find(block)?.groupValues?.get(1).orEmpty()
-        val tests = if (status == "KILLED") field("killingTests").ifEmpty { field("killingTest") } else field("succeedingTests")
+        val tests = when (status) {
+            "KILLED" -> field("killingTests").ifEmpty { field("killingTest") }
+            else -> field("succeedingTests")
+        }
         return Mutation(
             status = status,
             where = field("sourceFile") to field("lineNumber").toInt(),
@@ -99,7 +103,7 @@ abstract class MutationSummaryTask : DefaultTask() {
     private fun coverage(index: File): String? {
         val match = COVERAGE.find(if (index.isFile) index.readText() else "") ?: return null
         val (run, total) = match.destructured
-        return "$run of $total lines run by the tests (${run.toInt() * 100 / total.toInt()}%)"
+        return "$run of $total lines run by the tests (${run.toInt() * PERCENT / total.toInt()}%)"
     }
 
     private fun sourceLine(fileName: String, line: Int): String =
@@ -108,6 +112,8 @@ abstract class MutationSummaryTask : DefaultTask() {
 
     private companion object {
         const val CODE_WIDTH = 40
+        const val LINE_NUMBER_WIDTH = 3
+        const val PERCENT = 100
         const val DESCRIPTION_WIDTH = 22
         const val NAMES_WIDTH = 38
         val BLOCK = Regex("<mutation .*?</mutation>", RegexOption.DOT_MATCHES_ALL)
@@ -117,20 +123,22 @@ abstract class MutationSummaryTask : DefaultTask() {
         val COVERAGE = Regex("coverage_legend\">(\\d+)/(\\d+)<")
         val SYMBOLS = mapOf("multiplication" to "*", "division" to "/", "subtraction" to "-", "addition" to "+")
 
-        /** PIT's descriptions, in plain words. */
-        fun plain(description: String): String {
-            Regex("Replaced integer (\\w+) with (\\w+)").matchEntire(description)?.let {
-                return "${SYMBOLS[it.groupValues[1]]} became ${SYMBOLS[it.groupValues[2]]}"
-            }
-            Regex("Changed increment from (\\d+) to -(\\d+)").matchEntire(description)?.let {
-                return "+= ${it.groupValues[1]} became -= ${it.groupValues[2]}"
-            }
-            return when {
-                description == "changed conditional boundary" -> "boundary moved by one"
-                description.startsWith("replaced int return with 0") -> "result replaced with 0"
-                description.startsWith("negated conditional") -> "condition reversed"
-                else -> description
-            }
-        }
+        /** PIT's descriptions, in plain words: the first pattern matching the whole description rewords it. */
+        val REWORDINGS = listOf(
+            reword("Replaced integer (\\w+) with (\\w+)") {
+                "${SYMBOLS[it.groupValues[1]]} became ${SYMBOLS[it.groupValues[2]]}"
+            },
+            reword("Changed increment from (\\d+) to -(\\d+)") {
+                "+= ${it.groupValues[1]} became -= ${it.groupValues[2]}"
+            },
+            reword("changed conditional boundary") { "boundary moved by one" },
+            reword("replaced int return with 0.*") { "result replaced with 0" },
+            reword("negated conditional.*") { "condition reversed" },
+        )
+
+        fun reword(pattern: String, words: (MatchResult) -> String) = Regex(pattern) to words
+
+        fun plain(description: String): String = REWORDINGS
+            .firstNotNullOfOrNull { (pattern, words) -> pattern.matchEntire(description)?.let(words) } ?: description
     }
 }

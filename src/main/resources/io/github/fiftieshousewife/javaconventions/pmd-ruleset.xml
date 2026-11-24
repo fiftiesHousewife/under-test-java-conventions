@@ -31,6 +31,25 @@
         </properties>
     </rule>
 
+    <rule name="TestMustAssert"
+          language="java"
+          message="A test makes exactly one assertion: this one makes none, so it can't fail when the code is wrong"
+          class="net.sourceforge.pmd.lang.rule.xpath.XPathRule">
+        <description>
+            A test makes exactly one assertion statement. One with none passes whatever the code does. An assert*,
+            assertThat(...), assertAll(...), assertThrows(...) or Mockito verify(...) call anywhere in the test counts.
+        </description>
+        <priority>1</priority>
+        <properties>
+            <property name="xpath">
+                <value><![CDATA[
+//MethodDeclaration[ModifierList/Annotation[@SimpleName = ('Test', 'ParameterizedTest', 'RepeatedTest', 'Property', 'Example')]]
+  [Block][not(.//MethodCall[starts-with(@MethodName, 'assert') or starts-with(@MethodName, 'verify')])]
+                ]]></value>
+            </property>
+        </properties>
+    </rule>
+
     <rule name="MultipleAssertionsMustUseAssertAll"
           language="java"
           message="A test makes one assertion, or one assertAll(...): split it, or group what it checks in one assertAll"

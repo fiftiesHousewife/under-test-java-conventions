@@ -53,6 +53,13 @@
                 value="A field has no comment: name it so it needs none, or say it on the class or method."/>
         </module>
         <module name="MatchXpath">
+            <property name="id" value="NoEnumEntryComment"/>
+            <property name="query" value="//ENUM_CONSTANT_DEF[./SINGLE_LINE_COMMENT or ./BLOCK_COMMENT_BEGIN
+                or ./*[not(self::OBJBLOCK)]//SINGLE_LINE_COMMENT or ./*[not(self::OBJBLOCK)]//BLOCK_COMMENT_BEGIN]"/>
+            <message key="matchxpath.match"
+                value="An enum entry has no comment: name it so it needs none, or say it on the enum."/>
+        </module>
+        <module name="MatchXpath">
             <property name="id" value="JavadocOnlyWhenPublic"/>
             <property name="query" value="//*[self::CLASS_DEF or self::INTERFACE_DEF or self::ENUM_DEF or self::RECORD_DEF or self::ANNOTATION_DEF or self::METHOD_DEF or self::CTOR_DEF or self::COMPACT_CTOR_DEF][./*[not(self::OBJBLOCK or self::SLIST)]//BLOCK_COMMENT_BEGIN[starts-with(COMMENT_CONTENT/@text, '*')]][not(MODIFIERS/LITERAL_PUBLIC or parent::OBJBLOCK/parent::INTERFACE_DEF) or ancestor::*[self::CLASS_DEF or self::INTERFACE_DEF or self::ENUM_DEF or self::RECORD_DEF or self::ANNOTATION_DEF][not(MODIFIERS/LITERAL_PUBLIC or parent::OBJBLOCK/parent::INTERFACE_DEF)]]"/>
             <message key="matchxpath.match"

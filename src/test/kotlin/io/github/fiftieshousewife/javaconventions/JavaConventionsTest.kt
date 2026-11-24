@@ -79,6 +79,26 @@ class JavaConventionsTest {
     }
 
     @Test
+    fun `a test making no assertion fails PMD`(@TempDir dir: File) {
+        val result = SampleProject(dir).main("com/example/Greeting.java", CleanSample.GREETING).test(
+            "com/example/GreetingTest.java",
+            """
+            package com.example;
+
+            import org.junit.jupiter.api.Test;
+
+            class GreetingTest {
+                @Test
+                void greetsByName() {
+                    new Greeting().greet("Ada");
+                }
+            }
+            """,
+        ).buildAndFail("pmdTest")
+        assertThat(result.output).contains("TestMustAssert")
+    }
+
+    @Test
     fun `with codeStyle NONE the code-quality checks are skipped`(@TempDir dir: File) {
         val lines = (1..21).joinToString("\n") { "        total += $it;" }
         val result = SampleProject(dir).main(

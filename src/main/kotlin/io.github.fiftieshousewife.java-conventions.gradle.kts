@@ -49,7 +49,8 @@ val underTest = extensions.create<UnderTestExtension>("underTest").apply {
     pmdRuleset.convention(fileProperty("underTest.pmdRuleset"))
     forbiddenApiSignatures.convention(fileProperty("underTest.forbiddenApiSignatures"))
     minLineCoverage.convention(
-        providers.gradleProperty("underTest.minLineCoverage").orElse(version("min-line-coverage")).map { it.toBigDecimal() },
+        providers.gradleProperty("underTest.minLineCoverage").orElse(version("min-line-coverage"))
+            .map { it.toBigDecimal() },
     )
 }
 val codeStyle = underTest.codeStyle
@@ -61,7 +62,8 @@ fun Task.useOrganisationFile(organisationFile: RegularFileProperty, setting: Str
             if (organisationFile.isPresent) {
                 apply(organisationFile.get().asFile)
             } else {
-                val message = "underTest.codeStyle is ORGANISATION, so set underTest.$setting to the organisation's file"
+                val message =
+                    "underTest.codeStyle is ORGANISATION, so set underTest.$setting to the organisation's file"
                 doFirst { throw GradleException(message) }
             }
             true
@@ -142,7 +144,8 @@ afterEvaluate {
 
 // JaCoCo skips its verification when no test ran, which would let code with no tests pass the floor.
 val mainCode = extensions.getByType<SourceSetContainer>()["main"].allJava
-val coverageData = files(tasks.named<JacocoCoverageVerification>("jacocoTestCoverageVerification").map { it.executionData })
+val coverageData =
+    files(tasks.named<JacocoCoverageVerification>("jacocoTestCoverageVerification").map { it.executionData })
 val requireTests = tasks.register("requireTests") {
     group = "verification"
     description = "Fails when there is main code but no test ran, so the coverage floor can't be skipped."
@@ -182,7 +185,11 @@ checkstyle {
 val advice = "pmdAdvice"
 afterEvaluate {
     tasks.withType<Checkstyle>().configureEach {
-        if (!useOrganisationFile(underTest.checkstyleConfig, "checkstyleConfig") { configFile = it; configDirectory = it.parentFile }) {
+        val usesOrganisationFile = useOrganisationFile(underTest.checkstyleConfig, "checkstyleConfig") {
+            configFile = it
+            configDirectory = it.parentFile
+        }
+        if (!usesOrganisationFile) {
             config = bundledRules("checkstyle.xml")
         }
     }
@@ -192,7 +199,10 @@ afterEvaluate {
         }
     }
     tasks.withType<CheckForbiddenApis>().configureEach {
-        if (!useOrganisationFile(underTest.forbiddenApiSignatures, "forbiddenApiSignatures") { signaturesFiles = files(it) }) {
+        val usesOrganisationFile = useOrganisationFile(underTest.forbiddenApiSignatures, "forbiddenApiSignatures") {
+            signaturesFiles = files(it)
+        }
+        if (!usesOrganisationFile) {
             signaturesURLs = setOf(bundled.getResource("forbidden-signatures.txt")!!)
         }
     }
@@ -211,7 +221,7 @@ tasks.withType<Pmd>().configureEach {
     classpath = (classpath ?: files()).plus(files(jdkClasses))
 }
 
-// ---------- Advice: PMD rules that are reported but never fail the build, such as preferring streams to loops ----------
+// ---------- Advice: PMD rules that are reported but never fail the build, such as preferring streams ----------
 val sourceSetsForAdvice = extensions.getByType<SourceSetContainer>()
 val pmdAdvice = tasks.register<Pmd>(advice) {
     group = "verification"
@@ -257,6 +267,39 @@ tasks.named("check") {
     dependsOn(cpdCheck)
 }
 
+// ---------- Package size: a package holding many classes is several packages ----------
+val maxClassesPerPackage = 20
+val notClasses = setOf("package-info.java", "module-info.java")
+val checkPackageSize = tasks.register("checkPackageSize") {
+    group = "verification"
+    description = "Fails if a package holds more than $maxClassesPerPackage classes, in any source set."
+    val style = underTest.codeStyle
+    onlyIf("underTest.codeStyle is not NONE") { style.get() != CodeStyleSource.NONE }
+    val roots = provider { sourceSetsForAdvice.associate { it.name to it.java.srcDirs.filter(File::isDirectory) } }
+    val limit = maxClassesPerPackage
+    val skipped = notClasses
+    doLast {
+        val tooBig = roots.get().flatMap { (sourceSet, dirs) ->
+            dirs.flatMap { root ->
+                root.walkTopDown().filter { it.isFile && it.extension == "java" && it.name !in skipped }
+                    .map { sourceSet to it.parentFile.relativeTo(root).invariantSeparatorsPath.replace('/', '.') }
+                    .toList()
+            }
+        }.groupingBy { it }.eachCount().filterValues { it > limit }
+        if (tooBig.isNotEmpty()) {
+            throw GradleException(
+                tooBig.entries.sortedBy { it.key.second }.joinToString("\n") { (where, count) ->
+                    "Package ${where.second.ifEmpty { "(default)" }} in ${where.first} has $count classes, " +
+                        "more than $limit: split it into packages by what its classes do."
+                },
+            )
+        }
+    }
+}
+tasks.named("check") {
+    dependsOn(checkPackageSize)
+}
+
 // ---------- Bugs and security bugs ----------
 spotbugs {
     toolVersion = version("spotbugs")
@@ -294,7 +337,8 @@ tasks.withType<DependencyUpdatesTask>().configureEach {
 }
 
 // Reads the versions report. Warns about out-of-date dependencies, or fails when quality.failOnStaleDependencies=true.
-val failOnStaleDependencies = providers.gradleProperty("quality.failOnStaleDependencies").map { it.toBoolean() }.orElse(false)
+val failOnStaleDependencies =
+    providers.gradleProperty("quality.failOnStaleDependencies").map { it.toBoolean() }.orElse(false)
 val dependencyReport = layout.buildDirectory.file("reports/dependencyUpdates/report.json")
 val checkDependencyVersions = tasks.register("checkDependencyVersions") {
     group = "verification"
