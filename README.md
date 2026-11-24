@@ -34,7 +34,7 @@ the build.
 | Standard | Checked by |
 |---|---|
 | Methods of 20 lines or fewer; files of 150 lines or fewer; lines of 120 characters or fewer | Checkstyle |
-| Cyclomatic complexity 6 or less, cognitive complexity 7 or less, NPath complexity 50 or less; boolean expressions of 3 operators or fewer | Checkstyle and PMD |
+| Cyclomatic complexity 5 or less, cognitive complexity 6 or less, NPath complexity under 50; boolean expressions of 3 operators or fewer | Checkstyle and PMD |
 | No more than three parameters, and no record with more than three components | Checkstyle, PMD |
 | One assertion statement per test: one `assert...`/`assertThat` chain, or one `assertAll(...)` | PMD |
 | No comment on a field; Javadoc only on public API | Checkstyle |
