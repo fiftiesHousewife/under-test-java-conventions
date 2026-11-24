@@ -49,7 +49,7 @@ class JavaConventionsTest {
             "package com.example;\n\npublic class Long {\n    public int sum() {\n        int total = 0;\n$lines\n" +
                 "        return total;\n    }\n}\n",
         ).buildAndFail("checkstyleMain")
-        assertThat(result.output).contains("Method length is")
+        assertThat(result.output).contains("[MethodLength]")
     }
 
     @Test
