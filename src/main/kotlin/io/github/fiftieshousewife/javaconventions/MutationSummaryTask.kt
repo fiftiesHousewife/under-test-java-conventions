@@ -4,6 +4,9 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
+import org.gradle.work.DisableCachingByDefault
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.TaskAction
 import java.io.File
@@ -12,6 +15,7 @@ import java.io.File
  * Prints a plain-English summary after PIT runs: how many lines the tests ran, how many planted bugs (mutations) the
  * tests caught, and each missed one next to the line of code it changed. It replaces reading PIT's long console output.
  */
+@DisableCachingByDefault(because = "It only prints a summary of the last PIT report")
 abstract class MutationSummaryTask : DefaultTask() {
 
     /** PIT's report folder, holding mutations.xml and index.html. */
@@ -20,6 +24,7 @@ abstract class MutationSummaryTask : DefaultTask() {
 
     /** The main source folders, to show the line of code each missed bug changed. */
     @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val sourceDirs: ConfigurableFileCollection
 
     private data class Mutation(
