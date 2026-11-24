@@ -56,6 +56,13 @@ class JavaConventionsTest {
     }
 
     @Test
+    fun `PMD reads the JDK's classes from the toolchain, for advice too`(@TempDir dir: File) {
+        val result = SampleProject(dir).main("com/example/Greeting.java", CleanSample.GREETING)
+            .build("pmdMain", "pmdAdvice")
+        assertThat(result.output).doesNotContain("Adding current platform")
+    }
+
+    @Test
     fun `a test making two assertion statements fails PMD`(@TempDir dir: File) {
         val result = SampleProject(dir).main("com/example/Greeting.java", CleanSample.GREETING).test(
             "com/example/GreetingTest.java",

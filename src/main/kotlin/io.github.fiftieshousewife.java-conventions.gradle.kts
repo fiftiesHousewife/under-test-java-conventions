@@ -227,10 +227,10 @@ pmd {
     isIgnoreFailures = false
 }
 
+// The JDK's own classes, from the toolchain, so PMD resolves types against the JDK the code is built with.
+val jdkClasses = files(toolchainLauncher.map { it.metadata.installationPath.file("lib/jrt-fs.jar") })
 tasks.withType<Pmd>().configureEach {
-    // The JDK's own classes, from the toolchain, so PMD resolves types against the JDK the code is built with.
-    val jdkClasses = toolchainLauncher.map { it.metadata.installationPath.file("lib/jrt-fs.jar") }
-    classpath = (classpath ?: files()).plus(files(jdkClasses))
+    classpath = (classpath ?: files()).plus(jdkClasses)
 }
 
 // ---------- Advice: PMD rules that are reported but never fail the build, such as preferring streams ----------
@@ -239,7 +239,7 @@ val pmdAdvice = tasks.register<Pmd>(advice) {
     group = "verification"
     description = "Reports, without failing the build, what the plugin's advice rules find."
     source(sourceSetsForAdvice["main"].allJava, sourceSetsForAdvice["test"].allJava)
-    classpath = sourceSetsForAdvice["test"].runtimeClasspath
+    classpath = sourceSetsForAdvice["test"].runtimeClasspath + jdkClasses
     ruleSetConfig = bundledRules("pmd-advice.xml")
     ignoreFailures = true
     reports.html.outputLocation = layout.buildDirectory.file("reports/pmd/advice.html")
