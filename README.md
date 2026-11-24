@@ -1,8 +1,10 @@
 # java-conventions
 
-[![Build](https://github.com/fiftiesHousewife/under-test-java-conventions/actions/workflows/build.yml/badge.svg)](https://github.com/fiftiesHousewife/under-test-java-conventions/actions/workflows/build.yml)
-[![Maven Central](https://img.shields.io/maven-central/v/io.github.fiftieshousewife/java-conventions)](https://central.sonatype.com/artifact/io.github.fiftieshousewife/java-conventions)
-[![Licence](https://img.shields.io/badge/licence-Apache%202.0-blue)](LICENSE)
+[![build](https://img.shields.io/github/actions/workflow/status/fiftiesHousewife/under-test-java-conventions/build.yml?branch=main&label=build)](https://github.com/fiftiesHousewife/under-test-java-conventions/actions/workflows/build.yml)
+[![maven central](https://img.shields.io/maven-central/v/io.github.fiftieshousewife/java-conventions?label=maven%20central)](https://central.sonatype.com/artifact/io.github.fiftieshousewife/java-conventions)
+[![runs on](https://img.shields.io/badge/runs%20on-Gradle%209.1%2B%2C%20JDK%2021%2B-blue)](#using-it)
+[![licence](https://img.shields.io/badge/licence-Apache--2.0-blue)](LICENSE)
+[![decisions](https://img.shields.io/badge/decisions-MADR-informational)](docs/decisions/README.md)
 
 Part of under-test.
 
