@@ -1,5 +1,7 @@
 # java-conventions
 
+Part of under-test.
+
 **One set of code-quality standards for Java, as one Gradle plugin: each repo applies a pinned version instead of
 keeping its own copy of the rules.**
 
