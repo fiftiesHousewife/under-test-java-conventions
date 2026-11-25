@@ -7,11 +7,15 @@ object JavaPackages {
 
     private val NOT_CLASSES = setOf("package-info.java", "module-info.java")
 
-    /** Each package's name with the number of classes in it ("" is the default package). */
-    fun classCounts(roots: Collection<File>): Map<String, Int> = roots.flatMap { root ->
-        root.walkTopDown().filter { it.isFile && it.extension == "java" && it.name !in NOT_CLASSES }
-            .map { packageOf(root, it) }.toList()
-    }.groupingBy { it }.eachCount()
+    /**
+     * Each package's name with the number of classes in it ("" is the default package), leaving out the files the
+     * [SourcePatterns] given match.
+     */
+    fun classCounts(roots: Collection<File>, excludes: Collection<String> = emptyList()): Map<String, Int> =
+        roots.filter(File::isDirectory).flatMap { root ->
+            SourcePatterns.files(listOf(root), "java", excludes).filter { it.name !in NOT_CLASSES }
+                .map { packageOf(root, it) }
+        }.groupingBy { it }.eachCount()
 
     /** PIT's target classes: every named package with classes in it, as "com.example.*". */
     fun targets(roots: Collection<File>): List<String> =

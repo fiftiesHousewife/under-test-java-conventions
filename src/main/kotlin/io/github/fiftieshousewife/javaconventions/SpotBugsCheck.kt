@@ -3,7 +3,9 @@ package io.github.fiftieshousewife.javaconventions
 import org.gradle.api.GradleException
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.tasks.Classpath
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.JavaExec
@@ -47,6 +49,10 @@ abstract class SpotBugsCheck : JavaExec() {
     @get:PathSensitive(PathSensitivity.NONE)
     abstract val excludeFilter: RegularFileProperty
 
+    /** Classes to leave out, as patterns of their source files' paths ([SourcePatterns]). */
+    @get:Input
+    abstract val excludes: ListProperty<String>
+
     @get:OutputFile
     abstract val xmlReport: RegularFileProperty
 
@@ -67,15 +73,20 @@ abstract class SpotBugsCheck : JavaExec() {
     private fun arguments(): List<String> {
         val aux = temporaryDir.resolve("auxclasspath.txt")
         aux.writeText(auxClasspath.files.joinToString("\n"))
+        val classes = temporaryDir.resolve("classes.txt")
+        classes.writeText(
+            SourcePatterns.files(classesDirs.files, "class", SourcePatterns.forClasses(excludes.get()))
+                .joinToString("\n"),
+        )
         return listOf(
             "-effort:max", "-low", "-noClassOk", "-quiet",
             "-pluginList", pluginJars.files.joinToString(File.pathSeparator),
             "-auxclasspathFromFile", aux.path,
+            "-analyzeFromFile", classes.path,
             "-sourcepath", sourceDirs.files.filter(File::isDirectory).joinToString(File.pathSeparator),
             "-xml:withMessages=${xmlReport.get().asFile.path}",
             "-html=${htmlReport.get().asFile.path}",
-        ) + (excludeFilter.orNull?.let { listOf("-exclude", it.asFile.path) } ?: emptyList()) +
-            classesDirs.files.filter(File::isDirectory).map { it.path }
+        ) + (excludeFilter.orNull?.let { listOf("-exclude", it.asFile.path) } ?: emptyList())
     }
 
     private companion object {

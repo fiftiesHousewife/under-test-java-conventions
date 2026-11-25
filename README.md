@@ -66,6 +66,7 @@ from its command line, with a plain-English summary after it). `check` works wit
 |---|---|---|
 | `underTest.codeStyle` | `TOOLKIT` | `ORGANISATION` uses the organisation's rule files below; `NONE` switches the code-quality checks off, for an organisation whose own plugin does them |
 | `underTest.checkstyleConfig`, `underTest.pmdRuleset`, `underTest.forbiddenApiSignatures` | none | The organisation's files, with `ORGANISATION` |
+| `underTest.codeStyleExcludes` | none | Paths the code-quality checks leave out, as Ant-style patterns from the source folder (`**/legacy/**`, `**/*WeakTest.java`): code kept below the standards on purpose. A Gradle property separates them with commas |
 | `underTest.spotbugsExcludeFilter` | none | A SpotBugs filter file of findings to leave out, kept in the repo |
 | `underTest.cpdMinimumTokens` | `50` | The fewest copied tokens that fail the copy-paste check |
 | `underTest.maxClassesPerPackage` | `20` | The most classes a package may hold |

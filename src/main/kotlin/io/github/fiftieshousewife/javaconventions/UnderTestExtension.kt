@@ -1,6 +1,7 @@
 package io.github.fiftieshousewife.javaconventions
 
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 
 /**
@@ -25,6 +26,13 @@ abstract class UnderTestExtension {
 
     /** With [CodeStyleSource.ORGANISATION]: extra forbidden-API signatures, in addition to the bundled JDK sets. */
     abstract val forbiddenApiSignatures: RegularFileProperty
+
+    /**
+     * Paths the code-quality checks leave out: code a repo keeps below the standards on purpose. Ant-style patterns
+     * from the source folder ([SourcePatterns]), such as every `legacy` package or every class whose name ends in
+     * `WeakTest`. Coverage and the compiler still see that code.
+     */
+    abstract val codeStyleExcludes: ListProperty<String>
 
     /** A SpotBugs filter file of findings to leave out, kept in the repo; with any `codeStyle` but NONE. */
     abstract val spotbugsExcludeFilter: RegularFileProperty

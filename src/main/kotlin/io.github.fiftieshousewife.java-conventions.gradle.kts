@@ -15,6 +15,7 @@ import io.github.fiftieshousewife.javaconventions.CodeStyleSource
 import io.github.fiftieshousewife.javaconventions.InfoLineFilter
 import io.github.fiftieshousewife.javaconventions.JavaPackages
 import io.github.fiftieshousewife.javaconventions.MutationSummaryTask
+import io.github.fiftieshousewife.javaconventions.SourcePatterns
 import io.github.fiftieshousewife.javaconventions.SpotBugsCheck
 import io.github.fiftieshousewife.javaconventions.UnderTestExtension
 import java.io.OutputStream
@@ -46,6 +47,10 @@ val underTest = extensions.create<UnderTestExtension>("underTest").apply {
     pmdRuleset.convention(fileProperty("underTest.pmdRuleset"))
     forbiddenApiSignatures.convention(fileProperty("underTest.forbiddenApiSignatures"))
     spotbugsExcludeFilter.convention(fileProperty("underTest.spotbugsExcludeFilter"))
+    codeStyleExcludes.convention(
+        providers.gradleProperty("underTest.codeStyleExcludes")
+            .map { value -> value.split(',').map(String::trim).filter(String::isNotEmpty) }.orElse(emptyList()),
+    )
     cpdMinimumTokens.convention(
         providers.gradleProperty("underTest.cpdMinimumTokens").orElse(version("cpd-minimum-tokens")).map { it.toInt() },
     )
@@ -213,6 +218,12 @@ afterEvaluate {
             ruleSetConfig = bundledRules("pmd-ruleset.xml")
         }
     }
+    // Code the repo keeps below the standards on purpose (underTest.codeStyleExcludes), in every checking task.
+    tasks.withType<Checkstyle>().configureEach { exclude(underTest.codeStyleExcludes.get()) }
+    tasks.withType<Pmd>().configureEach { exclude(underTest.codeStyleExcludes.get()) }
+    tasks.withType<CheckForbiddenApis>().configureEach {
+        exclude(SourcePatterns.forClasses(underTest.codeStyleExcludes.get()))
+    }
     tasks.withType<CheckForbiddenApis>().configureEach {
         val usesOrganisationFile = useOrganisationFile(underTest.forbiddenApiSignatures, "forbiddenApiSignatures") {
             signaturesFiles = files(it)
@@ -268,17 +279,22 @@ val cpdCheck = tasks.register<JavaExec>("cpdCheck") {
     onlyIf("underTest.codeStyle is not NONE") { style.get() != CodeStyleSource.NONE }
     // Every source set's Java folders, including those added after the plugin, such as integration tests.
     val sources = files(provider { sourceSetsForAdvice.flatMap { it.java.srcDirs } }).filter { it.isDirectory }
-    val javaFiles = sources.asFileTree.matching { include("**/*.java") }
-    onlyIf("there is Java code") { !javaFiles.isEmpty }
+    val excludes = underTest.codeStyleExcludes
     inputs.files(sources).withPathSensitivity(PathSensitivity.RELATIVE)
+    inputs.property("codeStyleExcludes", excludes)
+    onlyIf("there is Java code to check") { SourcePatterns.files(sources.files, "java", excludes.get()).isNotEmpty() }
     classpath = cpdTool
     mainClass = "net.sourceforge.pmd.cli.PmdCli"
     javaLauncher = toolchainLauncher
     val minimumTokens = underTest.cpdMinimumTokens
+    // The files to check, listed in a file, so that the paths left out by underTest.codeStyleExcludes stay out.
+    val fileList = temporaryDir.resolve("files.txt")
+    doFirst {
+        fileList.writeText(SourcePatterns.files(sources.files, "java", excludes.get()).joinToString("\n"))
+    }
     args("cpd", "--language", "java", "--format", "text")
     argumentProviders.add(CommandLineArgumentProvider {
-        listOf("--minimum-tokens", "${minimumTokens.get()}") +
-            sources.files.sorted().flatMap { listOf("--dir", it.path) }
+        listOf("--minimum-tokens", "${minimumTokens.get()}", "--file-list", fileList.path)
     })
 }
 tasks.named("check") {
@@ -293,9 +309,10 @@ val checkPackageSize = tasks.register("checkPackageSize") {
     onlyIf("underTest.codeStyle is not NONE") { style.get() != CodeStyleSource.NONE }
     val roots = provider { sourceSetsForAdvice.associate { it.name to it.java.srcDirs.filter(File::isDirectory) } }
     val limit = underTest.maxClassesPerPackage
+    val excludes = underTest.codeStyleExcludes
     doLast {
         val tooBig = roots.get().flatMap { (sourceSet, dirs) ->
-            JavaPackages.classCounts(dirs).filterValues { it > limit.get() }.map { (name, count) ->
+            JavaPackages.classCounts(dirs, excludes.get()).filterValues { it > limit.get() }.map { (name, count) ->
                 "Package ${name.ifEmpty { "(default)" }} in $sourceSet has $count classes, " +
                     "more than ${limit.get()}: split it into packages by what its classes do."
             }
@@ -340,6 +357,7 @@ sourceSetsForAdvice.configureEach {
         pluginJars.from(spotbugsPlugins)
         sourceDirs.from(sourceSet.allSource.sourceDirectories)
         excludeFilter = underTest.spotbugsExcludeFilter
+        excludes = underTest.codeStyleExcludes
         xmlReport = spotbugsReports.map { it.file("${sourceSet.name}.xml") }
         htmlReport = spotbugsReports.map { it.file("${sourceSet.name}.html") }
     }
