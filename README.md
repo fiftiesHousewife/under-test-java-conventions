@@ -54,11 +54,12 @@ the build.
 | Final local variables, braces always, no star, unused or redundant imports, no empty blocks, simplified boolean expressions and returns | Checkstyle |
 | Advice, never failing the build: a stream or `forEach` rather than a for-each loop | PMD, in `pmdAdvice` |
 
-It also sets Java 25 by toolchain (a repo may still build for an older Java with `options.release`), compiles with every warning about the code as an error, builds archives reproducibly, and adds
-Lombok, the SLF4J API, JUnit and AssertJ. An application gets Log4j 2 behind SLF4J at run time; a library (one that
-applies `java-library`) gets it for its own tests only, leaving its users to choose their logging. It reports
-out-of-date dependencies (`dependencyUpdates`; checked in CI), and makes mutation testing available (`pitest`, PIT run
-from its command line, with a plain-English summary after it). `check` works with the configuration cache.
+It also sets Java 25 by toolchain (a repo may still build for an older Java with `options.release`), compiles with
+every warning about the code as an error, builds archives reproducibly, and adds Lombok, the SLF4J API, JUnit and
+AssertJ. An application gets Log4j 2 behind SLF4J at run time; a library (one that applies `java-library`) gets it
+for its own tests only, leaving its users to choose their logging. It reports out-of-date dependencies
+(`dependencyUpdates`; checked in CI), and makes mutation testing available (`pitest`, PIT run from its command line,
+with a plain-English summary after it). `check` works with the configuration cache.
 
 ## Settings an organisation can change
 
@@ -73,6 +74,9 @@ from its command line, with a plain-English summary after it). `check` works wit
 | `underTest.minLineCoverage` | `0.80` | The smallest line coverage, as a fraction |
 | `underTest.minMutationScore` | none | With it, `pitest` fails unless the tests catch at least this percentage of planted bugs |
 | `quality.failOnStaleDependencies` | `false` | `true` fails the build on an out-of-date dependency (checked in CI) |
+
+Code a repo keeps below the standards on purpose, such as a teaching example of code before it is improved, goes in
+`underTest.codeStyleExcludes` rather than switching the checks off for the whole project.
 
 Each can be set in the `underTest { }` block or as a Gradle property, so an organisation's init script can set it
 for every build. File settings are paths from the root project's folder.

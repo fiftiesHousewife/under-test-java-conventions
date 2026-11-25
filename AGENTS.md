@@ -10,11 +10,13 @@ Cite nothing outside this repo: a record, a comment or the README stands on what
 | Path | What |
 |---|---|
 | `src/main/kotlin/io.github.fiftieshousewife.java-conventions.gradle.kts` | The plugin: what it applies and how |
-| `src/main/kotlin/io/github/fiftieshousewife/javaconventions/` | Its classes: the `underTest` settings, the PIT summary, package counting |
+| `src/main/kotlin/io/github/fiftieshousewife/javaconventions/` | Its classes: the `underTest` settings, the SpotBugs task, the PIT summary, package counting, the path patterns of `codeStyleExcludes` |
 | `src/main/resources/io/github/fiftieshousewife/javaconventions/` | The rule files: Checkstyle, PMD (failing, and advice), forbidden-API signatures |
 | `gradle/libs.versions.toml` | The plugin's own build, and the tool versions it applies (written into the jar as `versions.properties`) |
-| `src/test/kotlin/` | Functional tests (sample projects built with Gradle TestKit; `StyleBreaches` and `ApiBreaches` hold a sample breaking each rule) and unit tests |
+| `src/functionalTest/kotlin/` | Functional tests: sample projects built with Gradle TestKit; `StyleBreaches` and `ApiBreaches` hold a sample breaking each rule |
+| `src/test/kotlin/` | Unit tests of the plugin's classes |
 | `docs/decisions/` | This repo's decision records: why each rule, limit and tool is what it is |
+| `docs/releases/` | Each release's notes, `<version>.md`, which the release workflow puts on its GitHub release |
 | `.github/skills/` | Skills for working here, such as writing a decision record (linked into `.claude/skills/` for Claude Code) |
 
 ## Rules for a change
@@ -45,7 +47,8 @@ a laptop, as the daemons competed for memory and couldn't be reused. A build app
 for it.
 
 ## Releasing
-Push a version tag, such as `v0.1.0`. The [release workflow](.github/workflows/release.yml) runs every check, then
+Write `docs/releases/<version>.md`: what changed since the last release, each change with its decision record. Then
+push a version tag, such as `v0.1.0`. The [release workflow](.github/workflows/release.yml) runs every check, then
 publishes that version to Maven Central and makes a GitHub release, with `docs/releases/<version>.md` as its notes when
 there is one. It needs four repository secrets: `CENTRAL_PORTAL_USERNAME` and `CENTRAL_PORTAL_PASSWORD` (a Central
 Portal user token), and `SIGNING_KEY` and `SIGNING_KEY_PASSWORD` (an ASCII-armoured PGP private key and its

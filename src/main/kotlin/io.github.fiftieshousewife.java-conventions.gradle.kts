@@ -2,7 +2,8 @@
 //  - environment (proxy, package repository): never set here; it comes from the organisation's Gradle init script;
 //  - code-quality standards: Checkstyle, PMD (complexity, the assertAll rule), copy-paste detection, SpotBugs with
 //    FindSecBugs, forbidden APIs. The rules inside this plugin are defaults: `underTest.codeStyle` = TOOLKIT,
-//    ORGANISATION (the organisation's rule files) or NONE (the organisation's own plugin does it);
+//    ORGANISATION (the organisation's rule files) or NONE (the organisation's own plugin does it), and
+//    `underTest.codeStyleExcludes` leaves out paths a repo keeps below the standards on purpose;
 //  - testing evidence: coverage verification, always on; only the threshold changes.
 // Every underTest setting can also be a Gradle property, e.g. -PunderTest.codeStyle=NONE, or in an init script.
 // Advice (for-each loops) is reported by pmdAdvice and never fails the build. Mutation testing is opt-in: pitest.
