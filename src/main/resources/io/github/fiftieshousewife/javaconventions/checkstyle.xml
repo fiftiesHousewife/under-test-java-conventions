@@ -53,6 +53,13 @@
             <message key="matchxpath.match"
                 value="A field has no comment: name it so it needs none, or say it on the class or method."/>
         </module>
+        <module name="RegexpSinglelineJava">
+            <property name="id" value="NoFieldCommentAfter"/>
+            <property name="format"
+                value="^\s*(@\w+(\([^)]*\))?\s+)*((final|transient|volatile)\s+)*(public|protected|private|static)\b[^{]*;\s*(//|/\*)"/>
+            <property name="message"
+                value="A field has no comment: name it so it needs none, or say it on the class or method."/>
+        </module>
         <module name="MatchXpath">
             <property name="id" value="NoEnumEntryComment"/>
             <property name="query" value="//ENUM_CONSTANT_DEF[./SINGLE_LINE_COMMENT or ./BLOCK_COMMENT_BEGIN
