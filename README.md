@@ -44,7 +44,7 @@ the build.
 | Methods of 20 lines or fewer; files of 150 lines or fewer; lines of 120 characters or fewer | Checkstyle |
 | Cyclomatic complexity 5 or less, cognitive complexity 6 or less, NPath complexity under 50; boolean expressions of 3 operators or fewer | Checkstyle and PMD |
 | No more than three parameters, and no record with more than three components | Checkstyle, PMD |
-| Exactly one assertion statement per test: one `assert...`/`assertThat` chain, one Mockito `verify(...)`, or one `assertAll(...)` grouping several; a test with none fails | PMD |
+| Exactly one assertion statement per test: one `assert...`/`assertThat` chain, one Mockito `verify(...)`, or one `assertAll(...)` grouping several; a test with none fails (REST Assured's `then()`, ArchUnit's `check(...)`, Awaitility's `until...(...)` and jetCheck's `shouldHold(...)` count as assertions) | PMD |
 | No comment on a field or an enum entry; Javadoc only on public API | Checkstyle |
 | No copy-pasted code (50 tokens or more; `underTest.cpdMinimumTokens`) | PMD's copy-paste detector (`cpdCheck`) |
 | No package of more than 20 classes, in any source set (`underTest.maxClassesPerPackage`) | The plugin (`checkPackageSize`) |

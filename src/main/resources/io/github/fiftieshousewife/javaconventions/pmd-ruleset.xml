@@ -38,14 +38,17 @@
           class="net.sourceforge.pmd.lang.rule.xpath.XPathRule">
         <description>
             A test makes exactly one assertion statement. One with none passes whatever the code does. An assert*,
-            assertThat(...), assertAll(...), assertThrows(...) or Mockito verify(...) call anywhere in the test counts.
+            assertThat(...), assertAll(...), assertThrows(...) or verify(...) call anywhere in the test counts, and so
+            do the assertion styles of established test libraries: then() (REST Assured, BDDMockito), check(...)
+            (ArchUnit), until*(...) (Awaitility) and shouldHold(...) (jetCheck).
         </description>
         <priority>1</priority>
         <properties>
             <property name="xpath">
                 <value><![CDATA[
 //MethodDeclaration[ModifierList/Annotation[@SimpleName = ('Test', 'ParameterizedTest', 'RepeatedTest', 'Property', 'Example')]]
-  [Block][not(.//MethodCall[starts-with(@MethodName, 'assert') or starts-with(@MethodName, 'verify')])]
+  [Block][not(.//MethodCall[starts-with(@MethodName, 'assert') or starts-with(@MethodName, 'verify')
+      or starts-with(@MethodName, 'until') or @MethodName = ('then', 'check', 'shouldHold')])]
                 ]]></value>
             </property>
         </properties>
