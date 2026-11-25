@@ -26,4 +26,11 @@ class LoggingTest {
         val result = library(dir).build("dependencies", "--configuration", "testRuntimeClasspath")
         assertThat(result.output).contains("org.apache.logging.log4j:log4j-core")
     }
+
+    @Test
+    fun `with logging off, neither the SLF4J API nor Log4j is added`(@TempDir dir: File) {
+        val result = library(dir).buildScript("underTest { logging = false }")
+            .build("dependencies", "--configuration", "testRuntimeClasspath")
+        assertThat(result.output).doesNotContain("org.slf4j", "log4j")
+    }
 }

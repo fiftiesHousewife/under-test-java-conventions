@@ -34,6 +34,9 @@ abstract class UnderTestExtension {
      */
     abstract val codeStyleExcludes: ListProperty<String>
 
+    /** With `false`, neither the SLF4J API nor Log4j is added: for code that logs nothing, and publishes no logging. */
+    abstract val logging: Property<Boolean>
+
     /** A SpotBugs filter file of findings to leave out, kept in the repo; with any `codeStyle` but NONE. */
     abstract val spotbugsExcludeFilter: RegularFileProperty
 

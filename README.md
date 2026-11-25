@@ -34,6 +34,9 @@ plugins {
 
 It needs Gradle 9.1 or later, running on JDK 21 or later, and a JDK 25 for the toolchain.
 
+A repo moving to it drops the Gradle plugins whose tasks it now provides: PIT's (`info.solidsoft.pitest`) and
+SpotBugs' (`com.github.spotbugs`). Their `pitest` and `spotbugsMain` tasks have the same names as the plugin's.
+
 `./gradlew check` then fails on any breach of the standards below, and `pmdAdvice` reports advice that never fails
 the build.
 
@@ -73,6 +76,7 @@ with a plain-English summary after it). `check` works with the configuration cac
 | `underTest.maxClassesPerPackage` | `20` | The most classes a package may hold |
 | `underTest.minLineCoverage` | `0.80` | The smallest line coverage, as a fraction |
 | `underTest.minMutationScore` | none | With it, `pitest` fails unless the tests catch at least this percentage of planted bugs |
+| `underTest.logging` | `true` | `false` adds neither the SLF4J API nor Log4j, for code that logs nothing and should publish no logging dependency |
 | `underTest.mutationTestingInCheck` | `false` | `true` makes `check` run `pitest` too, so a minimum mutation score is checked on every build |
 | `quality.failOnStaleDependencies` | `false` | `true` fails the build on an out-of-date dependency (checked in CI) |
 

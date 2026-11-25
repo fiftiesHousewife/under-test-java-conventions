@@ -37,3 +37,4 @@ Groups: **Size and simplicity**, **Tests**, **Comments**, **Duplication and stru
 | [0027](0027-a-test-librarys-own-assertion-call-counts-as-the-tests-assertion.md) | A test library's own assertion call counts as the test's assertion | Tests | accepted |
 | [0028](0028-junits-fail-counts-as-the-tests-assertion.md) | JUnit's fail(...) counts as the test's assertion | Tests | accepted |
 | [0029](0029-a-repo-can-run-mutation-testing-in-check.md) | A repo can run mutation testing in check | Coverage and evidence | accepted |
+| [0030](0030-code-that-logs-nothing-can-leave-out-the-logging-dependencies.md) | Code that logs nothing can leave out the logging dependencies | Build | accepted |

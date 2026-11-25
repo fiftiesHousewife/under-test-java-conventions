@@ -57,6 +57,7 @@ val underTest = extensions.create<UnderTestExtension>("underTest").apply {
         providers.gradleProperty("underTest.cpdMinimumTokens").orElse(version("cpd-minimum-tokens")).map { it.toInt() },
     )
     minMutationScore.convention(providers.gradleProperty("underTest.minMutationScore").map { it.toInt() })
+    logging.convention(providers.gradleProperty("underTest.logging").map { it.toBoolean() }.orElse(true))
     mutationTestingInCheck.convention(
         providers.gradleProperty("underTest.mutationTestingInCheck").map { it.toBoolean() }.orElse(false),
     )
@@ -95,13 +96,10 @@ java {
 val toolchainLauncher = javaToolchains.launcherFor { languageVersion = JavaLanguageVersion.of(version("java")) }
 
 dependencies {
-    // Logging: Lombok's @Slf4j on the SLF4J API. Log4j 2 behind it is added below, once it's known whether this is a
-    // library.
     "compileOnly"("org.projectlombok:lombok:${version("lombok")}")
     "annotationProcessor"("org.projectlombok:lombok:${version("lombok")}")
     "testCompileOnly"("org.projectlombok:lombok:${version("lombok")}")
     "testAnnotationProcessor"("org.projectlombok:lombok:${version("lombok")}")
-    "implementation"("org.slf4j:slf4j-api:${version("slf4j")}")
 
     "testImplementation"(platform("org.junit:junit-bom:${version("junit")}"))
     "testImplementation"("org.junit.jupiter:junit-jupiter")
@@ -110,12 +108,16 @@ dependencies {
 
 }
 
-// An application logs through Log4j 2 at run time. A library (java-library) gets it for its own tests only: it leaves
-// its users to choose their logging, and its published dependencies name only the SLF4J API.
+// Logging: Lombok's @Slf4j on the SLF4J API. An application logs through Log4j 2 at run time. A library (java-library)
+// gets it for its own tests only: it leaves its users to choose their logging, and its published dependencies name only
+// the SLF4J API. With underTest.logging = false, code that logs nothing gets neither.
 val log4j = listOf("log4j-core", "log4j-slf4j2-impl").map { "org.apache.logging.log4j:$it:${version("log4j")}" }
 afterEvaluate {
-    val configuration = if (plugins.hasPlugin("java-library")) "testRuntimeOnly" else "runtimeOnly"
-    log4j.forEach { dependencies.add(configuration, it) }
+    if (underTest.logging.get()) {
+        dependencies.add("implementation", "org.slf4j:slf4j-api:${version("slf4j")}")
+        val configuration = if (plugins.hasPlugin("java-library")) "testRuntimeOnly" else "runtimeOnly"
+        log4j.forEach { dependencies.add(configuration, it) }
+    }
 }
 
 tasks.withType<JavaCompile>().configureEach {
