@@ -34,3 +34,4 @@ Groups: **Size and simplicity**, **Tests**, **Comments**, **Duplication and stru
 | [0024](0024-compiling-for-an-older-java-is-not-a-warning-that-fails-the-build.md) | Compiling for an older Java is not a warning that fails the build | Build | accepted |
 | [0025](0025-a-repo-can-require-a-minimum-mutation-score.md) | A repo can require a minimum mutation score | Coverage and evidence | accepted |
 | [0026](0026-code-kept-below-the-standards-on-purpose-can-be-left-out-of-the-code-quality-checks.md) | Code kept below the standards on purpose can be left out of the code-quality checks | Settings | accepted |
+| [0027](0027-a-test-librarys-own-assertion-call-counts-as-the-tests-assertion.md) | A test library's own assertion call counts as the test's assertion | Tests | accepted |
