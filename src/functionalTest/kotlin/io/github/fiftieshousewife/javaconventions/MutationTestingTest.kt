@@ -27,4 +27,17 @@ class MutationTestingTest {
         ).buildAndFail("pitest", "-PunderTest.minMutationScore=90")
         assertThat(result.output).contains("below threshold of 90")
     }
+
+    @Test
+    fun `pitest stays out of check unless mutationTestingInCheck is set`(@TempDir dir: File) {
+        val result = CleanSample.into(SampleProject(dir)).build("check", "--dry-run")
+        assertThat(result.output).doesNotContain(":pitest SKIPPED")
+    }
+
+    @Test
+    fun `with mutationTestingInCheck, check runs pitest`(@TempDir dir: File) {
+        val result = CleanSample.into(SampleProject(dir)).buildScript("underTest { mutationTestingInCheck = true }")
+            .build("check", "--dry-run")
+        assertThat(result.output).contains(":pitest SKIPPED")
+    }
 }

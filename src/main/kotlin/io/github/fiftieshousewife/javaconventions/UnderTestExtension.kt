@@ -43,6 +43,9 @@ abstract class UnderTestExtension {
     /** Testing evidence: with it, pitest fails unless the tests catch at least this percentage of planted bugs. */
     abstract val minMutationScore: Property<Int>
 
+    /** Testing evidence: with `true`, `check` runs pitest too, so a minimum mutation score is checked every build. */
+    abstract val mutationTestingInCheck: Property<Boolean>
+
     /** The most classes a package may hold, in any source set (20 unless changed). */
     abstract val maxClassesPerPackage: Property<Int>
 

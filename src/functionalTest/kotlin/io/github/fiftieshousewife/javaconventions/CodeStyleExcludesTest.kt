@@ -92,4 +92,12 @@ class CodeStyleExcludesTest {
         )
         assertThat(result.task(":pmdTest")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
     }
+
+    @Test
+    fun `with every main class left out, the checks on classes skip rather than fail`(@TempDir dir: File) {
+        val result = CleanSample.into(SampleProject(dir))
+            .buildScript("underTest { codeStyleExcludes = listOf(\"**/Greeting.java\") }")
+            .build("spotbugsMain", "forbiddenApisMain")
+        assertThat(result.task(":spotbugsMain")?.outcome).isEqualTo(TaskOutcome.SKIPPED)
+    }
 }

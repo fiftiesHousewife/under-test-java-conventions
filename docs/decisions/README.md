@@ -35,3 +35,5 @@ Groups: **Size and simplicity**, **Tests**, **Comments**, **Duplication and stru
 | [0025](0025-a-repo-can-require-a-minimum-mutation-score.md) | A repo can require a minimum mutation score | Coverage and evidence | accepted |
 | [0026](0026-code-kept-below-the-standards-on-purpose-can-be-left-out-of-the-code-quality-checks.md) | Code kept below the standards on purpose can be left out of the code-quality checks | Settings | accepted |
 | [0027](0027-a-test-librarys-own-assertion-call-counts-as-the-tests-assertion.md) | A test library's own assertion call counts as the test's assertion | Tests | accepted |
+| [0028](0028-junits-fail-counts-as-the-tests-assertion.md) | JUnit's fail(...) counts as the test's assertion | Tests | accepted |
+| [0029](0029-a-repo-can-run-mutation-testing-in-check.md) | A repo can run mutation testing in check | Coverage and evidence | accepted |

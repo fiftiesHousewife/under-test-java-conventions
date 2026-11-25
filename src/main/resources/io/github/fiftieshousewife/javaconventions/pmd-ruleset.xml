@@ -40,7 +40,8 @@
             A test makes exactly one assertion statement. One with none passes whatever the code does. An assert*,
             assertThat(...), assertAll(...), assertThrows(...) or verify(...) call anywhere in the test counts, and so
             do the assertion styles of established test libraries: then() (REST Assured, BDDMockito), check(...)
-            (ArchUnit), until*(...) (Awaitility) and shouldHold(...) (jetCheck).
+            (ArchUnit), until*(...) (Awaitility) and shouldHold(...) (jetCheck), and fail(...), as in a test that fails in
+            the catch of what it checks.
         </description>
         <priority>1</priority>
         <properties>
@@ -48,7 +49,7 @@
                 <value><![CDATA[
 //MethodDeclaration[ModifierList/Annotation[@SimpleName = ('Test', 'ParameterizedTest', 'RepeatedTest', 'Property', 'Example')]]
   [Block][not(.//MethodCall[starts-with(@MethodName, 'assert') or starts-with(@MethodName, 'verify')
-      or starts-with(@MethodName, 'until') or @MethodName = ('then', 'check', 'shouldHold')])]
+      or starts-with(@MethodName, 'until') or @MethodName = ('then', 'check', 'shouldHold', 'fail')])]
                 ]]></value>
             </property>
         </properties>

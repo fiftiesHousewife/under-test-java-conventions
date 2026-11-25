@@ -59,6 +59,11 @@ abstract class SpotBugsCheck : JavaExec() {
     @get:OutputFile
     abstract val htmlReport: RegularFileProperty
 
+    init {
+        // SpotBugs given no class at all stops with its usage, so a source set whose classes are all left out skips.
+        onlyIf("there are classes to check") { classesToCheck().isNotEmpty() }
+    }
+
     override fun exec() {
         args = arguments()
         super.exec()
@@ -75,8 +80,7 @@ abstract class SpotBugsCheck : JavaExec() {
         aux.writeText(auxClasspath.files.joinToString("\n"))
         val classes = temporaryDir.resolve("classes.txt")
         classes.writeText(
-            SourcePatterns.files(classesDirs.files, "class", SourcePatterns.forClasses(excludes.get()))
-                .joinToString("\n"),
+            classesToCheck().joinToString("\n"),
         )
         return listOf(
             "-effort:max", "-low", "-noClassOk", "-quiet",
@@ -88,6 +92,9 @@ abstract class SpotBugsCheck : JavaExec() {
             "-html=${htmlReport.get().asFile.path}",
         ) + (excludeFilter.orNull?.let { listOf("-exclude", it.asFile.path) } ?: emptyList())
     }
+
+    private fun classesToCheck(): List<File> =
+        SourcePatterns.files(classesDirs.files, "class", SourcePatterns.forClasses(excludes.get()))
 
     private companion object {
         val BUG = Regex("<BugInstance ")

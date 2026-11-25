@@ -81,4 +81,30 @@ class AssertionRulesTest {
         ).build("pmdTest")
         assertThat(result.task(":pmdTest")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
     }
+
+    @Test
+    fun `a test that fails in the catch of what it checks has its assertion`(@TempDir dir: File) {
+        val result = SampleProject(dir).main("com/example/Greeting.java", CleanSample.GREETING).test(
+            "com/example/GreetingTest.java",
+            """
+            package com.example;
+
+            import static org.junit.jupiter.api.Assertions.fail;
+
+            import org.junit.jupiter.api.Test;
+
+            class GreetingTest {
+                @Test
+                void greetsByName() {
+                    try {
+                        new Greeting().greet("Ada");
+                    } catch (final IllegalStateException e) {
+                        fail(e);
+                    }
+                }
+            }
+            """,
+        ).build("pmdTest")
+        assertThat(result.task(":pmdTest")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+    }
 }

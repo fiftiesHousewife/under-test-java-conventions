@@ -6,7 +6,8 @@
 //    `underTest.codeStyleExcludes` leaves out paths a repo keeps below the standards on purpose;
 //  - testing evidence: coverage verification, always on; only the threshold changes.
 // Every underTest setting can also be a Gradle property, e.g. -PunderTest.codeStyle=NONE, or in an init script.
-// Advice (for-each loops) is reported by pmdAdvice and never fails the build. Mutation testing is opt-in: pitest.
+// Advice (for-each loops) is reported by pmdAdvice and never fails the build. Mutation testing is opt-in: pitest,
+// in check with underTest.mutationTestingInCheck.
 // SpotBugs, PIT and CPD run from their own command lines, so the plugin needs no Gradle plugin of theirs.
 
 import com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask
@@ -56,6 +57,9 @@ val underTest = extensions.create<UnderTestExtension>("underTest").apply {
         providers.gradleProperty("underTest.cpdMinimumTokens").orElse(version("cpd-minimum-tokens")).map { it.toInt() },
     )
     minMutationScore.convention(providers.gradleProperty("underTest.minMutationScore").map { it.toInt() })
+    mutationTestingInCheck.convention(
+        providers.gradleProperty("underTest.mutationTestingInCheck").map { it.toBoolean() }.orElse(false),
+    )
     maxClassesPerPackage.convention(
         providers.gradleProperty("underTest.maxClassesPerPackage").orElse(version("max-classes-per-package"))
             .map { it.toInt() },
@@ -435,7 +439,7 @@ val mutationSummary = tasks.register<MutationSummaryTask>("mutationSummary") {
     reportDir = pitReports
     sourceDirs.from(mainSourceSet.map { it.java.srcDirs })
 }
-tasks.register<JavaExec>("pitest") {
+val pitest = tasks.register<JavaExec>("pitest") {
     group = "verification"
     description = "Plants bugs (mutations) in the main code, runs the tests against each (PIT), and summarises."
     dependsOn(tasks.named("testClasses"))
@@ -470,4 +474,10 @@ tasks.register<JavaExec>("pitest") {
         pit.errorOutput = InfoLineFilter(System.err)
     }
     finalizedBy(mutationSummary)
+}
+
+// With underTest.mutationTestingInCheck, check runs pitest too.
+val mutationTestingInCheck = underTest.mutationTestingInCheck
+tasks.named("check") {
+    dependsOn(mutationTestingInCheck.map { if (it) listOf(pitest) else emptyList() })
 }
