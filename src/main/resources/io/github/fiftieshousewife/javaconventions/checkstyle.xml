@@ -28,6 +28,7 @@
         <module name="FinalLocalVariable"/>
         <module name="ParameterNumber">
             <property name="max" value="3"/>
+            <property name="ignoreOverriddenMethods" value="true"/>
             <property name="tokens" value="METHOD_DEF, CTOR_DEF"/>
         </module>
         <module name="RecordComponentNumber">

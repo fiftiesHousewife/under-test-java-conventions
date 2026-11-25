@@ -38,3 +38,4 @@ Groups: **Size and simplicity**, **Tests**, **Comments**, **Duplication and stru
 | [0028](0028-junits-fail-counts-as-the-tests-assertion.md) | JUnit's fail(...) counts as the test's assertion | Tests | accepted |
 | [0029](0029-a-repo-can-run-mutation-testing-in-check.md) | A repo can run mutation testing in check | Coverage and evidence | accepted |
 | [0030](0030-code-that-logs-nothing-can-leave-out-the-logging-dependencies.md) | Code that logs nothing can leave out the logging dependencies | Build | accepted |
+| [0031](0031-a-method-overriding-another-takes-the-parameters-its-supertype-fixed.md) | A method overriding another takes the parameters its supertype fixed | Size and simplicity | accepted |

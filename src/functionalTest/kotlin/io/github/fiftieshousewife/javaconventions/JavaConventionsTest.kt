@@ -115,4 +115,26 @@ class JavaConventionsTest {
         ).build("checkstyleMain", "-PunderTest.codeStyle=NONE")
         assertThat(result.task(":checkstyleMain")?.outcome).isEqualTo(TaskOutcome.SKIPPED)
     }
+
+    @Test
+    fun `a method overriding a library's takes as many parameters as the library fixed`(@TempDir dir: File) {
+        val result = SampleProject(dir).main(
+            "com/example/Watcher.java",
+            """
+            package com.example;
+
+            import java.awt.Image;
+            import java.awt.image.ImageObserver;
+
+            public class Watcher implements ImageObserver {
+                @Override
+                public boolean imageUpdate(final Image image, final int flags, final int x, final int y,
+                        final int width, final int height) {
+                    return flags == x + y + width + height && image != null;
+                }
+            }
+            """,
+        ).build("checkstyleMain", "pmdMain")
+        assertThat(result.task(":pmdMain")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+    }
 }

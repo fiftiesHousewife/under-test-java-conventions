@@ -29,6 +29,9 @@
     <rule ref="category/java/design.xml/ExcessiveParameterList">
         <properties>
             <property name="minimum" value="4"/>
+            <!-- A method overriding another takes the parameters its supertype fixed, often a library's. -->
+            <property name="violationSuppressXPath"
+                      value="./ancestor-or-self::MethodDeclaration[pmd-java:hasAnnotation('java.lang.Override')]"/>
         </properties>
     </rule>
 
