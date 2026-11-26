@@ -174,9 +174,12 @@ fun summarise(test: TaskProvider<Test>, skipsFail: Provider<Boolean>, whenSkipsF
     val root = rootDir
     val summary = tasks.register<TestSummaryTask>("${test.name}Summary") {
         description = "Ends ${test.name} in one line, and fails the build if a test failed."
-        resultsDir = test.map { it.reports.junitXml.outputLocation.get() }
-        report = test.map {
-            it.reports.html.outputLocation.get().file("index.html").asFile.relativeTo(root).invariantSeparatorsPath
+        // Read from the test task without depending on it: a finalizer depending on a task that failed doesn't run,
+        // and the summary must, even when a test ends the test JVM.
+        resultsDir = layout.dir(provider { test.get().reports.junitXml.outputLocation.get().asFile })
+        report = provider {
+            test.get().reports.html.outputLocation.get().file("index.html").asFile.relativeTo(root)
+                .invariantSeparatorsPath
         }
         this.skipsFail = skipsFail
         this.whenSkipsFail = whenSkipsFail

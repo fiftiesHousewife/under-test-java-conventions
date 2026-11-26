@@ -88,6 +88,31 @@ class TestRunsTest {
         assertThat(result.output).doesNotContain("PASSED")
     }
 
+    private val exitingTest = """
+        package com.example;
+
+        import static org.assertj.core.api.Assertions.assertThat;
+
+        import org.junit.jupiter.api.Test;
+
+        class ExitTest {
+            @Test
+            void exitsTheJvm() {
+                Runtime.getRuntime().exit(1);
+                assertThat(true).isTrue();
+            }
+        }
+    """
+
+    @Test
+    fun `when a test ends the test JVM, the run still ends in one line, counting the tests that reported`(
+        @TempDir dir: File,
+    ) {
+        val result = CleanSample.into(SampleProject(dir)).test("com/example/ExitTest.java", exitingTest)
+            .buildAndFail("test")
+        assertThat(result.output).containsPattern("(\\d+ of \\d+ tests passed; \\d+ didn't run\\.|No tests ran)")
+    }
+
     @Test
     fun `check runs the integration tests`(@TempDir dir: File) {
         val result = CleanSample.into(SampleProject(dir)).build("check", "--dry-run")
