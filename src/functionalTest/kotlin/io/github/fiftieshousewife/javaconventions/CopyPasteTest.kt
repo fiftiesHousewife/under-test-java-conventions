@@ -35,11 +35,11 @@ class CopyPasteTest {
     @Test
     fun `copied code in a source set added after the plugin is found too`(@TempDir dir: File) {
         val result = SampleProject(dir)
-            .buildScript("""sourceSets.create("integrationTest")""")
+            .buildScript("""sourceSets.create("acceptanceTest")""")
             .main("com/example/First.java", scorer("First"))
-            .write("src/integrationTest/java/com/example/Second.java", scorer("Second"))
+            .write("src/acceptanceTest/java/com/example/Second.java", scorer("Second"))
             .buildAndFail("cpdCheck")
-        assertThat(result.output).contains("src/integrationTest/java/com/example/Second.java")
+        assertThat(result.output).contains("src/acceptanceTest/java/com/example/Second.java")
     }
 
     @Test

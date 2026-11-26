@@ -49,6 +49,12 @@ abstract class UnderTestExtension {
     /** Testing evidence: with `true`, `check` runs pitest too, so a minimum mutation score is checked every build. */
     abstract val mutationTestingInCheck: Property<Boolean>
 
+    /**
+     * Testing evidence: with `true`, an integration test that didn't run doesn't fail a CI build. For CI machines that
+     * can't give the tests what they need, such as a runner whose containers aren't the kind the tests start.
+     */
+    abstract val integrationTestsMaySkip: Property<Boolean>
+
     /** The most classes a package may hold, in any source set (20 unless changed). */
     abstract val maxClassesPerPackage: Property<Int>
 

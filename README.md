@@ -64,6 +64,13 @@ for its own tests only, leaving its users to choose their logging. It reports ou
 (`dependencyUpdates`; checked in CI), and makes mutation testing available (`pitest`, PIT run from its command line,
 with a plain-English summary after it). `check` works with the configuration cache.
 
+Tests end in one line: "All 7 tests passed.", or "3 of 7 tests failed. Report: build/reports/tests/test/index.html",
+which fails the build and names the report by a path from the project's folder. In a quiet build (`--quiet`), as a
+recording uses, nothing shows a person's home folder; at Gradle's usual level, Gradle's own warning still names the
+report by its full path. Integration tests, such as those starting containers, go in their own suite, `src/integrationTest`,
+with the unit tests' libraries; `check` runs them, and in CI one that didn't run fails the build. A test JVM with
+Mockito on its class path starts with Mockito's agent, which JDK 21 and later warn about attaching at run time.
+
 ## Settings an organisation can change
 
 | Setting | Default | |
@@ -73,6 +80,7 @@ with a plain-English summary after it). `check` works with the configuration cac
 | `underTest.codeStyleExcludes` | none | Paths the code-quality checks leave out, as Ant-style patterns from the source folder (`**/legacy/**`, `**/*WeakTest.java`): code kept below the standards on purpose. A Gradle property separates them with commas |
 | `underTest.spotbugsExcludeFilter` | none | A SpotBugs filter file of findings to leave out, kept in the repo |
 | `underTest.cpdMinimumTokens` | `50` | The fewest copied tokens that fail the copy-paste check |
+| `underTest.integrationTestsMaySkip` | `false` | `true` lets an integration test that didn't run pass in CI, for a runner that can't give the tests what they need, such as one whose containers aren't the kind the tests start |
 | `underTest.maxClassesPerPackage` | `20` | The most classes a package may hold |
 | `underTest.minLineCoverage` | `0.80` | The smallest line coverage, as a fraction |
 | `underTest.minMutationScore` | none | With it, `pitest` fails unless the tests catch at least this percentage of planted bugs |

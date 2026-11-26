@@ -4,7 +4,8 @@
 //    FindSecBugs, forbidden APIs. The rules inside this plugin are defaults: `underTest.codeStyle` = TOOLKIT,
 //    ORGANISATION (the organisation's rule files) or NONE (the organisation's own plugin does it), and
 //    `underTest.codeStyleExcludes` leaves out paths a repo keeps below the standards on purpose;
-//  - testing evidence: coverage verification, always on; only the threshold changes.
+//  - testing evidence: coverage verification, always on; only the threshold changes. Unit tests (test) and integration
+//    tests (integrationTest) each end in a one-line summary; in CI an integration test that didn't run fails.
 // Every underTest setting can also be a Gradle property, e.g. -PunderTest.codeStyle=NONE, or in an init script.
 // Advice (for-each loops) is reported by pmdAdvice and never fails the build. Mutation testing is opt-in: pitest,
 // in check with underTest.mutationTestingInCheck.
@@ -19,6 +20,7 @@ import io.github.fiftieshousewife.javaconventions.JavaPackages
 import io.github.fiftieshousewife.javaconventions.MutationSummaryTask
 import io.github.fiftieshousewife.javaconventions.SourcePatterns
 import io.github.fiftieshousewife.javaconventions.SpotBugsCheck
+import io.github.fiftieshousewife.javaconventions.TestSummaryTask
 import io.github.fiftieshousewife.javaconventions.UnderTestExtension
 import java.io.OutputStream
 import java.util.Properties
@@ -60,6 +62,9 @@ val underTest = extensions.create<UnderTestExtension>("underTest").apply {
     logging.convention(providers.gradleProperty("underTest.logging").map { it.toBoolean() }.orElse(true))
     mutationTestingInCheck.convention(
         providers.gradleProperty("underTest.mutationTestingInCheck").map { it.toBoolean() }.orElse(false),
+    )
+    integrationTestsMaySkip.convention(
+        providers.gradleProperty("underTest.integrationTestsMaySkip").map { it.toBoolean() }.orElse(false),
     )
     maxClassesPerPackage.convention(
         providers.gradleProperty("underTest.maxClassesPerPackage").orElse(version("max-classes-per-package"))
@@ -136,6 +141,70 @@ tasks.withType<AbstractArchiveTask>().configureEach {
 tasks.named<Test>("test") {
     useJUnitPlatform()
     finalizedBy(tasks.named("jacocoTestReport"))
+}
+
+// Integration tests, such as those starting containers, in their own suite (src/integrationTest), with the unit tests'
+// libraries; check runs them after the unit tests.
+testing {
+    suites {
+        register<JvmTestSuite>("integrationTest") {
+            useJUnitJupiter(version("junit"))
+            dependencies {
+                implementation(project())
+            }
+        }
+    }
+}
+listOf("Implementation", "RuntimeOnly", "CompileOnly", "AnnotationProcessor").forEach { kind ->
+    configurations.named("integrationTest$kind") { extendsFrom(configurations["test$kind"]) }
+}
+val integrationTest = tasks.named<Test>("integrationTest") {
+    shouldRunAfter(tasks.named("test"))
+}
+tasks.named("check") {
+    dependsOn(integrationTest)
+}
+
+// A test task ends in one line ("All 7 tests passed.", "3 of 7 tests failed. Report: build/reports/...") instead of
+// Gradle's failure, whose full path shows a person's home folder in logs and recordings. The build still fails. Gradle
+// still warns with that path, which a quiet build (-q), as recordings use, leaves out.
+fun summarise(test: TaskProvider<Test>, skipsFail: Provider<Boolean>, whenSkipsFail: String) {
+    val root = rootDir
+    val summary = tasks.register<TestSummaryTask>("${test.name}Summary") {
+        description = "Ends ${test.name} in one line, and fails the build if a test failed."
+        resultsDir = test.map { it.reports.junitXml.outputLocation.get() }
+        report = test.map {
+            it.reports.html.outputLocation.get().file("index.html").asFile.relativeTo(root).invariantSeparatorsPath
+        }
+        this.skipsFail = skipsFail
+        this.whenSkipsFail = whenSkipsFail
+    }
+    test.configure {
+        ignoreFailures = true
+        finalizedBy(summary)
+    }
+}
+summarise(tasks.named<Test>("test"), provider { false }, "")
+// In CI an integration test that didn't run fails the build, unless underTest.integrationTestsMaySkip says it may.
+summarise(
+    integrationTest,
+    underTest.integrationTestsMaySkip.zip(providers.environmentVariable("CI").map { true }.orElse(false)) { skip, ci ->
+        ci && !skip
+    },
+    "CI must run every integration test, so give it what they need, such as a container runtime, or set " +
+        "underTest.integrationTestsMaySkip=true where it can't.",
+)
+
+// Mockito's inline mock maker needs its agent. JDK 21 and later warn when a library attaches an agent to a running JVM,
+// and a later JDK will refuse, so a test JVM with Mockito on its class path starts with Mockito's agent instead. Class
+// sharing is off with it: with an agent on the class path the JVM shares only its own classes, and says so every run.
+tasks.withType<Test>().configureEach {
+    doFirst {
+        val test = this as Test
+        test.classpath.firstOrNull { it.name.startsWith("mockito-core-") && it.extension == "jar" }?.let { agent ->
+            test.jvmArgs("-javaagent:${agent.absolutePath}", "-Xshare:off")
+        }
+    }
 }
 
 jacoco {
