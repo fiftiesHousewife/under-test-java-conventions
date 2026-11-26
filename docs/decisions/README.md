@@ -39,6 +39,6 @@ Groups: **Size and simplicity**, **Tests**, **Comments**, **Duplication and stru
 | [0029](0029-a-repo-can-run-mutation-testing-in-check.md) | A repo can run mutation testing in check | Coverage and evidence | accepted |
 | [0030](0030-code-that-logs-nothing-can-leave-out-the-logging-dependencies.md) | Code that logs nothing can leave out the logging dependencies | Build | accepted |
 | [0031](0031-a-method-overriding-another-takes-the-parameters-its-supertype-fixed.md) | A method overriding another takes the parameters its supertype fixed | Size and simplicity | accepted |
-| [0032](0032-a-test-run-ends-in-one-line-naming-its-report-by-a-path-from-the-project.md) | A test run ends in one line, naming its report by a path from the project | Build | proposed |
-| [0033](0033-integration-tests-are-their-own-suite-run-by-check-and-in-ci-none-may-skip.md) | Integration tests are their own suite, run by check, and in CI none may skip | Coverage and evidence | proposed |
-| [0034](0034-a-test-jvm-with-mockito-starts-with-mockitos-agent.md) | A test JVM with Mockito starts with Mockito's agent | Build | proposed |
+| [0032](0032-a-test-run-ends-in-one-line-naming-its-report-by-a-path-from-the-project.md) | A test run ends in one line, naming its report by a path from the project | Build | accepted |
+| [0033](0033-integration-tests-are-their-own-suite-run-by-check-and-in-ci-none-may-skip.md) | Integration tests are their own suite, run by check, and in CI none may skip | Coverage and evidence | accepted |
+| [0034](0034-a-test-jvm-with-mockito-starts-with-mockitos-agent.md) | A test JVM with Mockito starts with Mockito's agent | Build | accepted |
