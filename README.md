@@ -81,6 +81,7 @@ Mockito on its class path starts with Mockito's agent, which JDK 21 and later wa
 | `underTest.spotbugsExcludeFilter` | none | A SpotBugs filter file of findings to leave out, kept in the repo |
 | `underTest.cpdMinimumTokens` | `50` | The fewest copied tokens that fail the copy-paste check |
 | `underTest.integrationTestsMaySkip` | `false` | `true` lets an integration test that didn't run pass in CI, for a runner that can't give the tests what they need, such as one whose containers aren't the kind the tests start |
+| `underTest.listEachTest` | `false` | `true` shows each test's result even in a quiet build (`--quiet`), as a recording uses; failures without stack traces |
 | `underTest.maxClassesPerPackage` | `20` | The most classes a package may hold |
 | `underTest.minLineCoverage` | `0.80` | The smallest line coverage, as a fraction |
 | `underTest.minMutationScore` | none | With it, `pitest` fails unless the tests catch at least this percentage of planted bugs |

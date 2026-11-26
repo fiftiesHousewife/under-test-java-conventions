@@ -66,6 +66,7 @@ val underTest = extensions.create<UnderTestExtension>("underTest").apply {
     integrationTestsMaySkip.convention(
         providers.gradleProperty("underTest.integrationTestsMaySkip").map { it.toBoolean() }.orElse(false),
     )
+    listEachTest.convention(providers.gradleProperty("underTest.listEachTest").map { it.toBoolean() }.orElse(false))
     maxClassesPerPackage.convention(
         providers.gradleProperty("underTest.maxClassesPerPackage").orElse(version("max-classes-per-package"))
             .map { it.toInt() },
@@ -194,6 +195,21 @@ summarise(
     "CI must run every integration test, so give it what they need, such as a container runtime, or set " +
         "underTest.integrationTestsMaySkip=true where it can't.",
 )
+
+// With underTest.listEachTest, each test's result shows even in a quiet build, as a recording uses: passed, failed or
+// skipped, a failure with its message and no stack trace (the report has it).
+afterEvaluate {
+    if (underTest.listEachTest.get()) {
+        tasks.withType<Test>().configureEach {
+            testLogging.quiet {
+                events("passed", "failed", "skipped")
+                exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+                showStackTraces = false
+                showCauses = false
+            }
+        }
+    }
+}
 
 // Mockito's inline mock maker needs its agent. JDK 21 and later warn when a library attaches an agent to a running JVM,
 // and a later JDK will refuse, so a test JVM with Mockito on its class path starts with Mockito's agent instead. Class

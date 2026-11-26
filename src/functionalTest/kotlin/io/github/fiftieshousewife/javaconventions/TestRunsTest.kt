@@ -75,6 +75,20 @@ class TestRunsTest {
     }
 
     @Test
+    fun `with listEachTest, a quiet build shows each test's result`(@TempDir dir: File) {
+        val result = CleanSample.into(SampleProject(dir)).test("com/example/GreetingRudeTest.java", failingTest)
+            .buildAndFail("test", "--quiet", "-PunderTest.listEachTest=true")
+        assertThat(result.output)
+            .contains("GreetingTest > greetsByName() PASSED", "GreetingRudeTest > greetsRudely() FAILED")
+    }
+
+    @Test
+    fun `without listEachTest, a quiet build shows no passing test`(@TempDir dir: File) {
+        val result = CleanSample.into(SampleProject(dir)).build("test", "--quiet")
+        assertThat(result.output).doesNotContain("PASSED")
+    }
+
+    @Test
     fun `check runs the integration tests`(@TempDir dir: File) {
         val result = CleanSample.into(SampleProject(dir)).build("check", "--dry-run")
         assertThat(result.output).contains(":integrationTest SKIPPED")

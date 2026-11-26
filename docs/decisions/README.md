@@ -42,3 +42,4 @@ Groups: **Size and simplicity**, **Tests**, **Comments**, **Duplication and stru
 | [0032](0032-a-test-run-ends-in-one-line-naming-its-report-by-a-path-from-the-project.md) | A test run ends in one line, naming its report by a path from the project | Build | accepted |
 | [0033](0033-integration-tests-are-their-own-suite-run-by-check-and-in-ci-none-may-skip.md) | Integration tests are their own suite, run by check, and in CI none may skip | Coverage and evidence | accepted |
 | [0034](0034-a-test-jvm-with-mockito-starts-with-mockitos-agent.md) | A test JVM with Mockito starts with Mockito's agent | Build | accepted |
+| [0035](0035-a-repo-can-list-each-tests-result-in-a-quiet-build.md) | A repo can list each test's result in a quiet build | Settings | proposed |
