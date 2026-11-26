@@ -28,7 +28,7 @@ pluginManagement {
 
 // build.gradle.kts
 plugins {
-    id("io.github.fiftieshousewife.java-conventions") version "0.5.0"
+    id("io.github.fiftieshousewife.java-conventions") version "0.5.1"
 }
 ```
 
