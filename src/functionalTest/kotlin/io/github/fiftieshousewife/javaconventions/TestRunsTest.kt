@@ -108,12 +108,19 @@ class TestRunsTest {
         assertThat(result.output).contains("No tests ran; 1 skipped.")
     }
 
+    private fun withMockito(dir: File) = CleanSample.into(SampleProject(dir))
+        .buildScript("dependencies { testImplementation(\"org.mockito:mockito-core:5.18.0\") }")
+        .test("com/example/AgentTest.java", agentTest)
+
     @Test
     fun `a test JVM with Mockito on its class path starts with Mockito's agent`(@TempDir dir: File) {
-        val result = CleanSample.into(SampleProject(dir))
-            .buildScript("dependencies { testImplementation(\"org.mockito:mockito-core:5.18.0\") }")
-            .test("com/example/AgentTest.java", agentTest)
-            .build("test")
+        val result = withMockito(dir).build("test")
         assertThat(result.output).contains("All 2 tests passed.")
+    }
+
+    @Test
+    fun `with mockitoAgent off, a test JVM starts without Mockito's agent`(@TempDir dir: File) {
+        val result = withMockito(dir).buildAndFail("test", "-PunderTest.mockitoAgent=false")
+        assertThat(result.output).contains("1 of 2 tests failed.")
     }
 }

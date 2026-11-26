@@ -67,6 +67,7 @@ val underTest = extensions.create<UnderTestExtension>("underTest").apply {
         providers.gradleProperty("underTest.integrationTestsMaySkip").map { it.toBoolean() }.orElse(false),
     )
     listEachTest.convention(providers.gradleProperty("underTest.listEachTest").map { it.toBoolean() }.orElse(false))
+    mockitoAgent.convention(providers.gradleProperty("underTest.mockitoAgent").map { it.toBoolean() }.orElse(true))
     maxClassesPerPackage.convention(
         providers.gradleProperty("underTest.maxClassesPerPackage").orElse(version("max-classes-per-package"))
             .map { it.toInt() },
@@ -214,10 +215,13 @@ afterEvaluate {
 // Mockito's inline mock maker needs its agent. JDK 21 and later warn when a library attaches an agent to a running JVM,
 // and a later JDK will refuse, so a test JVM with Mockito on its class path starts with Mockito's agent instead. Class
 // sharing is off with it: with an agent on the class path the JVM shares only its own classes, and says so every run.
+// With underTest.mockitoAgent = false, Mockito attaches its agent itself, for code testing how that behaves.
 tasks.withType<Test>().configureEach {
+    val startAgent = underTest.mockitoAgent
     doFirst {
         val test = this as Test
-        test.classpath.firstOrNull { it.name.startsWith("mockito-core-") && it.extension == "jar" }?.let { agent ->
+        val agent = test.classpath.firstOrNull { it.name.startsWith("mockito-core-") && it.extension == "jar" }
+        if (startAgent.get() && agent != null) {
             test.jvmArgs("-javaagent:${agent.absolutePath}", "-Xshare:off")
         }
     }

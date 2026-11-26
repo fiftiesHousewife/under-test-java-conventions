@@ -58,6 +58,9 @@ abstract class UnderTestExtension {
     /** With `true`, each test's result shows even in a quiet build (`--quiet`), failures without stack traces. */
     abstract val listEachTest: Property<Boolean>
 
+    /** With `false`, a test JVM doesn't start with Mockito's agent, and Mockito attaches it itself as it runs. */
+    abstract val mockitoAgent: Property<Boolean>
+
     /** The most classes a package may hold, in any source set (20 unless changed). */
     abstract val maxClassesPerPackage: Property<Int>
 

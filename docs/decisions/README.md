@@ -43,3 +43,4 @@ Groups: **Size and simplicity**, **Tests**, **Comments**, **Duplication and stru
 | [0033](0033-integration-tests-are-their-own-suite-run-by-check-and-in-ci-none-may-skip.md) | Integration tests are their own suite, run by check, and in CI none may skip | Coverage and evidence | accepted |
 | [0034](0034-a-test-jvm-with-mockito-starts-with-mockitos-agent.md) | A test JVM with Mockito starts with Mockito's agent | Build | accepted |
 | [0035](0035-a-repo-can-list-each-tests-result-in-a-quiet-build.md) | A repo can list each test's result in a quiet build | Settings | proposed |
+| [0036](0036-code-testing-how-mockito-attaches-itself-can-leave-out-mockitos-agent.md) | Code testing how Mockito attaches itself can leave out Mockito's agent | Settings | proposed |
